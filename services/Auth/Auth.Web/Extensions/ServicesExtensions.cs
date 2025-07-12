@@ -1,6 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.OpenApi.Models;
+using Database;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Auth.Web.Extensions
 {
@@ -52,6 +55,24 @@ namespace Auth.Web.Extensions
                 })
                 .AddLogging()
                 .AddCors();
+        }
+
+        public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            var connectionBuilder = new NpgsqlConnectionStringBuilder()
+            {
+                Host = builder.Configuration["AUTH_DB_HOST"],
+                Database = builder.Configuration["AUTH_DB_NAME"],
+                Username = builder.Configuration["AUTH_DB_USERNAME"],
+                Password = builder.Configuration["AUTH_DB_PASSWORD"],
+            };
+
+            string connectionUrl = connectionBuilder.ConnectionString;
+
+            return services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(connectionUrl);
+            });
         }
     }
 }
