@@ -1,3 +1,4 @@
+using Auth.Web.Extensions;
 
 namespace Auth.Web
 {
@@ -13,6 +14,7 @@ namespace Auth.Web
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddServices(builder);
 
             var app = builder.Build();
 
