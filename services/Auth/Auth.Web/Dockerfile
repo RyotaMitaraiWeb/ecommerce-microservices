@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Auth.Web/Auth.Web.csproj", "Auth.Web/"]
+
 RUN dotnet restore "./Auth.Web/Auth.Web.csproj"
 COPY . .
 WORKDIR "/src/Auth.Web"
@@ -22,9 +23,21 @@ RUN dotnet build "./Auth.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Auth.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+COPY Auth.Web/init.sh /app/publish/init.sh
+RUN chmod +x /app/publish/init.sh
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Auth.Web.dll"]
+COPY Auth.Web ./Auth.Web
+COPY Auth ./Auth
+COPY Common ./Common
+COPY Database ./Database
+COPY Auth.Web/Migrations ./Migrations
+WORKDIR /app/Auth.Web
+RUN dotnet tool install --global dotnet-ef
+WORKDIR /app
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+ENTRYPOINT ["./init.sh"]

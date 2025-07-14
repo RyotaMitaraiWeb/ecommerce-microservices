@@ -71,7 +71,7 @@ namespace Auth.Web.Extensions
 
             return services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseNpgsql(connectionUrl);
+                options.UseNpgsql(connectionUrl, b => b.MigrationsAssembly("Auth.Web"));
             });
         }
     }
