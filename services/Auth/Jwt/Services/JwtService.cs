@@ -18,19 +18,10 @@ namespace Jwt.Services
 
         public Task<CreatedJwtDto> CreateTokenAsync(object payload)
         {
-            var data = Encoding.UTF8.GetBytes(secret);
-            var securityKey = new SymmetricSecurityKey(data);
+            SymmetricSecurityKey securityKey = GenerateSymmetricSecurityKey();
             var now = DateTime.UtcNow;
 
-            var claims = new List<Claim>();
-            foreach (var prop in payload.GetType().GetProperties())
-            {
-                var value = prop.GetValue(payload)?.ToString();
-                if (value != null)
-                {
-                    claims.Add(new Claim(prop.Name, value));
-                }
-            }
+            var claims = GenerateClaims(payload);
 
             var descriptor = new SecurityTokenDescriptor()
             {
@@ -41,11 +32,11 @@ namespace Jwt.Services
                     securityKey, SecurityAlgorithms.HmacSha256),
                 NotBefore = now,
                 Expires = now.AddMinutes(expiresInMinutes),
-                Subject = new ClaimsIdentity(claims),
+                Subject = claims,
             };
 
             var handler = new JsonWebTokenHandler();
-            var token = handler.CreateToken(descriptor);
+            string token = handler.CreateToken(descriptor);
 
             return Task.FromResult(new CreatedJwtDto
             {
@@ -57,6 +48,29 @@ namespace Jwt.Services
         {
             return config[envKey] 
                 ?? throw new JwtConfigNullException($"Environment variable \"{envKey}\" should be a non-null value.");
+        }
+
+        private SymmetricSecurityKey GenerateSymmetricSecurityKey()
+        {
+            var data = Encoding.UTF8.GetBytes(secret);
+            var securityKey = new SymmetricSecurityKey(data);
+            return securityKey;
+
+        }
+
+        private static ClaimsIdentity GenerateClaims(object payload)
+        {
+            var claims = new List<Claim>();
+            foreach (var prop in payload.GetType().GetProperties())
+            {
+                var value = prop.GetValue(payload)?.ToString();
+                if (value != null)
+                {
+                    claims.Add(new Claim(prop.Name, value));
+                }
+            }
+
+            return new ClaimsIdentity(claims);
         }
     }
 }
