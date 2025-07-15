@@ -1,4 +1,5 @@
-﻿using Jwt.Exceptions;
+﻿using Jwt.Constants;
+using Jwt.Exceptions;
 using Jwt.Services;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
@@ -38,9 +39,9 @@ namespace Tests.Integration.Services
         }
 
         [Test]
-        [TestCase("AUTH_JWT_ISSUER")]
-        [TestCase("AUTH_JWT_AUDIENCE")]
-        [TestCase("AUTH_JWT_SECRET")]
+        [TestCase(ConfigurationKeys.Issuer)]
+        [TestCase(ConfigurationKeys.Audience)]
+        [TestCase(ConfigurationKeys.Secret)]
         public void Constructor_ThrowsIfOneOfTheConfigurationsIsNull(string key)
         {
             // Arrange

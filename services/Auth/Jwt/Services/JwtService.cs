@@ -6,14 +6,18 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Jwt.Constants;
 
 namespace Jwt.Services
 {
     public class JwtService(IConfiguration config) : IJwtService
     {
-        private readonly string issuer = GetJwtConfigOrThrowIfNull("AUTH_JWT_ISSUER", config);
-        private readonly string audience = GetJwtConfigOrThrowIfNull("AUTH_JWT_AUDIENCE", config);
-        private readonly string secret = GetJwtConfigOrThrowIfNull("AUTH_JWT_SECRET", config);
+        private readonly string issuer = GetJwtConfigOrThrowIfNull(
+            ConfigurationKeys.Issuer, config);
+        private readonly string audience = GetJwtConfigOrThrowIfNull(
+            ConfigurationKeys.Audience, config);
+        private readonly string secret = GetJwtConfigOrThrowIfNull(
+            ConfigurationKeys.Secret, config);
         private readonly int expiresInMinutes = 60 * 24; // 24 hours
 
         public Task<CreatedJwtDto> CreateTokenAsync(object payload)
