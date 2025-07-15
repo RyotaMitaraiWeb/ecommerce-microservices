@@ -1,0 +1,56 @@
+﻿using Jwt.Exceptions;
+using Jwt.Services;
+using Microsoft.Extensions.Configuration;
+using NSubstitute;
+
+namespace Tests.Integration.Services
+{
+    public class JwtServiceTests
+    {
+        private IConfiguration configuration;
+        public JwtService Service { get; set; }
+
+        [SetUp]
+        public void SetUp()
+        {
+            configuration = Substitute.For<IConfiguration>();
+            configuration["AUTH_JWT_ISSUER"] = "issuer";
+            configuration["AUTH_JWT_AUDIENCE"] = "audience";
+            configuration["AUTH_JWT_SECRET"] = "OPQWMTNOnmjkq3njk3n2039n2jklnjwknw2jk3n2jlk3nkj23n5jkl23n5kj23n5kj23n5jk23n";
+            Service = new JwtService(configuration);
+        }
+
+        [Test]
+        public async Task CreateTokenAsync_ReturnsCreatedJwtDtoWhenSuccessful()
+        {
+            // Arrange
+            var payload = new { Test = "1" };
+
+            // Act
+            var result = await Service.CreateTokenAsync(payload);
+
+            // Assert
+
+            // HmacSha256 is deterministic, but to make the tests less shaky,
+            // (e.g. if the algorithm itself changes)
+            // we will just check if we got something resembling a token
+            Assert.That(result.Token, Has.Length.GreaterThan(10));
+        }
+
+        [Test]
+        [TestCase("AUTH_JWT_ISSUER")]
+        [TestCase("AUTH_JWT_AUDIENCE")]
+        [TestCase("AUTH_JWT_SECRET")]
+        public void Constructor_ThrowsIfOneOfTheConfigurationsIsNull(string key)
+        {
+            // Arrange
+            configuration[key] = null;
+
+            // Act
+            var execution = () => new JwtService(configuration);
+
+            // Assert
+            Assert.That(execution, Throws.InstanceOf<JwtConfigNullException>());
+        }
+    }
+}
