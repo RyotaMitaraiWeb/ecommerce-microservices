@@ -76,5 +76,20 @@ namespace Jwt.Services
 
             return new ClaimsIdentity(claims);
         }
+
+        public Task<UserClaimsDto> ReadTokenAsync(string? token)
+        {
+            var handler = new JsonWebTokenHandler();
+            var claims = handler.ReadJsonWebToken(token).Claims;
+
+            string email = claims.FirstOrDefault(claim => claim.Type == UserClaims.Email)!.Value;
+            string id = claims.FirstOrDefault(claim => claim.Type == UserClaims.Id)!.Value;
+
+            return Task.FromResult(new UserClaimsDto()
+            {
+                Id = id,
+                Email = email,
+            });
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Jwt.Constants;
+using Jwt.Dto;
 using Jwt.Exceptions;
 using Jwt.Services;
 using Microsoft.Extensions.Configuration;
@@ -52,6 +53,30 @@ namespace Tests.Integration.Services
 
             // Assert
             Assert.That(execution, Throws.InstanceOf<JwtConfigNullException>());
+        }
+
+        [Test]
+        public async Task ReadTokenAsync_ReturnsClaimsWhenTokenIsReadSuccessfully()
+        {
+            // Arrange
+            var claims = new UserClaimsDto()
+            {
+                Email = "abc@abc.com",
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var result = await Service.CreateTokenAsync(claims);
+            string token = result.Token;
+
+            // Act
+            var claimsResult = await Service.ReadTokenAsync(token);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(claimsResult.Id, Is.EqualTo(claims.Id));
+                Assert.That(claimsResult.Email, Is.EqualTo(claims.Email));
+            });
         }
     }
 }

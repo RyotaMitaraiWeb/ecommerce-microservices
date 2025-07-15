@@ -5,5 +5,6 @@ namespace Jwt.Services.Contracts
     public interface IJwtService
     {
         Task<CreatedJwtDto> CreateTokenAsync(object payload);
+        Task<UserClaimsDto> ReadTokenAsync(string? token);
     }
 }
