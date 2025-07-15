@@ -20,7 +20,7 @@ namespace Jwt.Services
             ConfigurationKeys.Secret, config);
         private readonly int expiresInMinutes = 60 * 24; // 24 hours
 
-        public Task<CreatedJwtDto> CreateTokenAsync(object payload)
+        public Task<CreatedJwtDto> CreateTokenAsync(UserClaimsDto payload)
         {
             SymmetricSecurityKey securityKey = GenerateSymmetricSecurityKey();
             var now = DateTime.UtcNow;
@@ -62,17 +62,13 @@ namespace Jwt.Services
 
         }
 
-        private static ClaimsIdentity GenerateClaims(object payload)
+        private static ClaimsIdentity GenerateClaims(UserClaimsDto payload)
         {
-            var claims = new List<Claim>();
-            foreach (var prop in payload.GetType().GetProperties())
+            var claims = new List<Claim>
             {
-                var value = prop.GetValue(payload)?.ToString();
-                if (value != null)
-                {
-                    claims.Add(new Claim(prop.Name, value));
-                }
-            }
+                new(UserClaims.Id, payload.Id),
+                new(UserClaims.Email, payload.Email)
+            };
 
             return new ClaimsIdentity(claims);
         }

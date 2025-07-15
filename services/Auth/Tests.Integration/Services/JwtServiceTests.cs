@@ -26,7 +26,11 @@ namespace Tests.Integration.Services
         public async Task CreateTokenAsync_ReturnsCreatedJwtDtoWhenSuccessful()
         {
             // Arrange
-            var payload = new { Test = "1" };
+            var payload = new UserClaimsDto()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = "abc@abc.com",
+            };
 
             // Act
             var result = await Service.CreateTokenAsync(payload);
