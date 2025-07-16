@@ -24,4 +24,6 @@ jobs:
         cd services/Auth
         dotnet build Auth.sln
     - name: Test
-      run: dotnet test Auth.sln --no-build --verbosity normal
+      run: |
+        cd services/Auth
+        dotnet test Auth.sln --no-build --verbosity normal
