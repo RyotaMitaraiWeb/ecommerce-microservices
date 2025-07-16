@@ -4,6 +4,8 @@ using Microsoft.OpenApi.Models;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Jwt.Services.Contracts;
+using Jwt.Services;
 
 namespace Auth.Web.Extensions
 {
@@ -54,7 +56,8 @@ namespace Auth.Web.Extensions
                     });
                 })
                 .AddLogging()
-                .AddCors();
+                .AddCors()
+                .AddScoped<IJwtService, JwtService>();
         }
 
         public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
