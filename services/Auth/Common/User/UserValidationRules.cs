@@ -10,6 +10,7 @@
         public static class Password
         {
             public const int MinLength = 8;
+            public const int MaxLength = 255;
         }
     }
 }
