@@ -1,12 +1,7 @@
-﻿using BCrypt.Net;
-using Bogus;
+﻿using Bogus;
 using Common.Extensions;
 using Database.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Tests.Util.Fakes
 {

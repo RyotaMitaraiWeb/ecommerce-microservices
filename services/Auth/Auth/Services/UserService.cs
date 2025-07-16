@@ -1,6 +1,7 @@
 ﻿using Auth.Dto;
 using Auth.Enums;
 using Auth.Services.Contracts;
+using BCrypt.Net;
 using Common.Extensions;
 using Database;
 using Database.Entities;
@@ -45,6 +46,32 @@ namespace Auth.Services
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(user => user.NormalizedEmail == email.DatabaseNormalize());
             return user is null;
+        }
+
+        public async Task<OneOf<SuccessfulAuthenticationDto, CheckCredentialsError>> CheckCredentials(LoginDto login)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(user => user.NormalizedEmail == login.Email.DatabaseNormalize());
+            if (user is null)
+            {
+                return CheckCredentialsError.NonExistantEmail;
+            }
+
+            bool passwordsMatch = ComparePasswords(user.PasswordHash, login.Password);
+            if (!passwordsMatch)
+            {
+                return CheckCredentialsError.WrongPassword;
+            }
+
+            return new SuccessfulAuthenticationDto()
+            {
+                Email = user.Email,
+                Id = user.Id.ToString(),
+            };
+        }
+
+        private static bool ComparePasswords(string userPassword, string inputPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(inputPassword, userPassword, true);
         }
     }
 }

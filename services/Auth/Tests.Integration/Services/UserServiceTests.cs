@@ -61,5 +61,60 @@ namespace Tests.Integration.Services
                 Assert.That(user.NormalizedEmail, Is.EqualTo(result.AsT0.Email.DatabaseNormalize()));
             });
         }
+
+        [Test]
+        public async Task CheckCredentials_ReturnsErrorWhenEmailDoesNotExist()
+        {
+            // Arrange
+            var loginDto = new LoginDto()
+            {
+                Email = "a@a.com",
+                Password = "reallysTrongpassword123"
+            };
+
+            // Act
+            var result = await Service.CheckCredentials(loginDto);
+
+            // Assert
+            Assert.That(result.Value, Is.EqualTo(CheckCredentialsError.NonExistantEmail));
+        }
+
+        [Test]
+        public async Task CheckCredentials_ReturnsErrorOnWrongPassword()
+        {
+            // Arrange
+            var loginDto = new LoginDto()
+            {
+                Email = TestDB.Users[0].Email,
+                Password = "reallysTrongpassword123"
+            };
+
+            // Act
+            var result = await Service.CheckCredentials(loginDto);
+
+            // Assert
+            Assert.That(result.Value, Is.EqualTo(CheckCredentialsError.WrongPassword));
+        }
+
+        [Test]
+        public async Task CheckCredentials_ReturnsDtoWhenSuccessful()
+        {
+            // Arrange
+            string password = "abCde12@!";
+            string email = TestDB.Users[0].Email;
+
+            var login = new LoginDto()
+            {
+                Password = password,
+                Email = email,
+            };
+
+            // Act
+            var result = await Service.CheckCredentials(login);
+
+            // Assert
+            var user = result.AsT0;
+            Assert.That(user.Email, Is.EqualTo(email));
+        }
     }
 }
