@@ -1,6 +1,7 @@
 ﻿using Auth.Dto;
 using Auth.Enums;
 using Auth.Services;
+using Common.Extensions;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Tests.Util;
@@ -57,6 +58,7 @@ namespace Tests.Integration.Services
             {
                 Assert.That(user.Id, Is.EqualTo(Guid.Parse(result.AsT0.Id)));
                 Assert.That(user.Email, Is.EqualTo(result.AsT0.Email));
+                Assert.That(user.NormalizedEmail, Is.EqualTo(result.AsT0.Email.DatabaseNormalize()));
             });
         }
     }

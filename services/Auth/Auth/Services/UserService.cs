@@ -1,6 +1,7 @@
 ﻿using Auth.Dto;
 using Auth.Enums;
 using Auth.Services.Contracts;
+using Common.Extensions;
 using Database;
 using Database.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace Auth.Services
             var user = new User()
             {
                 Email = register.Email,
+                NormalizedEmail = register.Email.DatabaseNormalize(),
                 PasswordHash = HashPassword(register.Password),
             };
 
@@ -41,7 +43,7 @@ namespace Auth.Services
 
         private async Task<bool> EmailIsAvailable(string email)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(user => user.Email == email);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(user => user.NormalizedEmail == email.DatabaseNormalize());
             return user is null;
         }
     }
