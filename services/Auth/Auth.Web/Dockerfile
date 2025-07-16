@@ -32,6 +32,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY Auth.Web ./Auth.Web
 COPY Auth ./Auth
+COPY Jwt ./Jwt
 COPY Common ./Common
 COPY Database ./Database
 COPY Auth.Web/Migrations ./Migrations
