@@ -17,6 +17,7 @@ namespace Auth.Dto
         [HasAnUpperCaseLetter]
         [HasALowerCaseLetter]
         [HasANumber]
+        [HasSpecialSymbol]
         public string Password { get; set; } = string.Empty;
     }
 }
