@@ -16,6 +16,7 @@ namespace Auth.Dto
         [MinLength(UserValidationRules.Password.MinLength)]
         [HasAnUpperCaseLetter]
         [HasALowerCaseLetter]
+        [HasANumber]
         public string Password { get; set; } = string.Empty;
     }
 }

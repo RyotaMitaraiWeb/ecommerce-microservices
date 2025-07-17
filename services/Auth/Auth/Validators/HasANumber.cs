@@ -5,7 +5,7 @@ namespace Auth.Validators
 {
     [AttributeUsage(AttributeTargets.Property |
   AttributeTargets.Field, AllowMultiple = false)]
-    public partial class HasALowerCaseLetter : ValidationAttribute
+    public partial class HasANumber : ValidationAttribute
     {
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
@@ -16,15 +16,15 @@ namespace Auth.Validators
 
             string input = value as string ?? string.Empty;
 
-            bool hasALowerCase = LowerCaseRegex().Match(input).Success;
-            if (!hasALowerCase)
+            bool hasANumber = NumberRegex().Match(input).Success;
+            if (!hasANumber)
             {
-                return new ValidationResult("Value does not contain a lowercase letter");
+                return new ValidationResult("Value does not contain a number");
             }
             return ValidationResult.Success;
         }
 
-        [GeneratedRegex("[a-z]")]
-        private static partial Regex LowerCaseRegex();
+        [GeneratedRegex("[0-9]")]
+        private static partial Regex NumberRegex();
     }
 }
