@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 namespace Tests.Unit.Validators
 {
     [TestFixture]
-    public class HasAnUpperCaseLetterTests
+    public class HasALowerCaseLetterTests
     {
-        public HasAnUpperCaseLetter Attribute;
+        public HasALowerCaseLetter Attribute;
 
         [SetUp]
         public void SetUp()
         {
-            Attribute = new HasAnUpperCaseLetter();
+            Attribute = new HasALowerCaseLetter();
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace Tests.Unit.Validators
         public void IsValid_ReturnsError_WhenInvalid()
         {
             // Arrange
-            string input = "hello";
+            string input = "HELLO";
             var context = new ValidationContext(new object());
 
             // Act

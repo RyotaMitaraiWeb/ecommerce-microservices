@@ -15,6 +15,7 @@ namespace Auth.Dto
         [MaxLength(UserValidationRules.Password.MaxLength)]
         [MinLength(UserValidationRules.Password.MinLength)]
         [HasAnUpperCaseLetter]
+        [HasALowerCaseLetter]
         public string Password { get; set; } = string.Empty;
     }
 }
