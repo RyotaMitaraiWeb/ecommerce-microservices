@@ -2,7 +2,7 @@ using Auth.Web.Extensions;
 
 namespace Auth.Web
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
