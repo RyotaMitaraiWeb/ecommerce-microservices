@@ -1,0 +1,22 @@
+# Build Stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["Auth.Web/Auth.Web.csproj", "Auth.Web/"]
+RUN dotnet restore "Auth.Web/Auth.Web.csproj"
+
+COPY Auth.Web ./Auth.Web
+WORKDIR /src/Auth.Web
+RUN dotnet publish "Auth.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Final Runtime Stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Expose only the production port
+EXPOSE 80
+
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "Auth.Web.dll"]
