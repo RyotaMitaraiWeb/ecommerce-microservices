@@ -3,10 +3,8 @@ using Auth.Services.Contracts;
 using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Jwt.Util;
-using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OneOf.Types;
 
 namespace Auth.Web.Controllers
 {
