@@ -28,6 +28,22 @@ namespace Auth.Web.Controllers
             return Created(string.Empty, payload);
         }
 
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto register)
+        {
+            var data = await userService.CreateUser(register);
+            if (data.Value is not SuccessfulAuthenticationDto result)
+            {
+                return Unauthorized();
+            }
+
+            AuthPayloadDto payload = await CreateAuthPayload(result);
+
+            // returning an empty string for location for now, as the API isn't exposing
+            // a details endpoint for users
+            return Created(string.Empty, payload);
+        }
+
         private static UserClaimsDto CreateClaims(SuccessfulAuthenticationDto data)
         {
             return new UserClaimsDto()

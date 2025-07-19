@@ -6,7 +6,6 @@ using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-using System.Net;
 
 namespace Tests.Unit.Controllers
 {
@@ -80,6 +79,72 @@ namespace Tests.Unit.Controllers
 
             // Act
             var result = await Controller.Login(login);
+
+            // Assert
+            var response = result as CreatedResult;
+            Assert.That(response?.StatusCode, Is.EqualTo(201));
+
+            var value = response.Value as AuthPayloadDto;
+
+            Assert.That(value?.Token, Is.EqualTo(token));
+            Assert.That(value.UserClaims.Email, Is.EqualTo(claims.Email));
+        }
+
+        [Test]
+        [TestCase(CreateUserError.EmailIsTaken)]
+        public async Task Register_ReturnsUnauthorizedIfAnErrorIsReturned(CreateUserError error)
+        {
+            // Arrange
+            var register = new RegisterDto()
+            {
+                Email = "abc@abc.com",
+                Password = "A!strongpassword1",
+            };
+
+            UserService.CreateUser(register).Returns(error);
+
+            // Act
+            var result = await Controller.Register(register);
+
+            // Assert
+            var response = result as UnauthorizedResult;
+            Assert.That(response?.StatusCode, Is.EqualTo(401));
+        }
+
+        [Test]
+        public async Task Register_ReturnsCreatedIfSuccessful()
+        {
+            // Arrange
+            var register = new RegisterDto()
+            {
+                Email = "abc@abc.com",
+                Password = "A!strongpassword1",
+            };
+
+            var successfulAuth = new SuccessfulAuthenticationDto()
+            {
+                Email = register.Email,
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var claims = new UserClaimsDto()
+            {
+                Email = successfulAuth.Email,
+                Id = successfulAuth.Id,
+            };
+
+            string token = "a";
+
+            var createdToken = new CreatedJwtDto()
+            {
+                Token = token,
+            };
+
+            UserService.CreateUser(register).Returns(successfulAuth);
+            JwtService.CreateTokenAsync(claims).ReturnsForAnyArgs(createdToken);
+
+            // Act
+            var result = await Controller.Register(register);
 
             // Assert
             var response = result as CreatedResult;
