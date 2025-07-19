@@ -4,7 +4,7 @@ services:
   auth-service:
     container_name: auth-service
     build:
-      context: ./services/Auth/Auth.Web
+      context: ./services/Auth
       dockerfile: Dockerfile.prod
     image: auth-service-prod
     environment:
