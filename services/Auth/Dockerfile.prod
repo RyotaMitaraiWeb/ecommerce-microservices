@@ -1,13 +1,12 @@
-# Build Stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project and dependencies
-COPY Auth.Web.csproj Auth.Web/
-COPY ../Common/Common.csproj Common/
-COPY ../Auth/Auth.csproj Auth/
-COPY ../Jwt/Jwt.csproj Jwt/
-COPY ../Database/Database.csproj Database/
+COPY Auth.Web/Auth.Web.csproj Auth.Web/
+COPY Common/Common.csproj Common/
+COPY Auth/Auth.csproj Auth/
+COPY Jwt/Jwt.csproj Jwt/
+COPY Database/Database.csproj Database/
 
 RUN dotnet restore "Auth.Web/Auth.Web.csproj"
 
@@ -21,14 +20,12 @@ COPY Database/ Database/
 WORKDIR /src/Auth.Web
 RUN dotnet publish "Auth.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Final Runtime Stage
+# Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Expose only the production port
 EXPOSE 80
-
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "Auth.Web.dll"]
