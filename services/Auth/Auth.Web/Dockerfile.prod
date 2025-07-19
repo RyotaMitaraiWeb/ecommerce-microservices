@@ -2,10 +2,22 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY ["/Auth.Web.csproj", "Auth.Web/"]
+# Copy project and dependencies
+COPY Auth.Web.csproj Auth.Web/
+COPY ../Common/Common.csproj Common/
+COPY ../Auth/Auth.csproj Auth/
+COPY ../Jwt/Jwt.csproj Jwt/
+COPY ../Database/Database.csproj Database/
+
 RUN dotnet restore "Auth.Web/Auth.Web.csproj"
 
-COPY Auth.Web ./Auth.Web
+# Copy full source
+COPY Auth.Web/ Auth.Web/
+COPY Common/ Common/
+COPY Auth/ Auth/
+COPY Jwt/ Jwt/
+COPY Database/ Database/
+
 WORKDIR /src/Auth.Web
 RUN dotnet publish "Auth.Web.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
