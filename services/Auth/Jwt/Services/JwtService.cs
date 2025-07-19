@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Jwt.Constants;
+using Jwt.Util;
 
 namespace Jwt.Services
 {
@@ -76,7 +77,8 @@ namespace Jwt.Services
         public Task<UserClaimsDto> ReadTokenAsync(string? token)
         {
             var handler = new JsonWebTokenHandler();
-            var claims = handler.ReadJsonWebToken(token).Claims;
+            string jwt = TokenUtil.RemoveBearer(token);
+            var claims = handler.ReadJsonWebToken(jwt).Claims;
 
             string email = claims.FirstOrDefault(claim => claim.Type == UserClaims.Email)!.Value;
             string id = claims.FirstOrDefault(claim => claim.Type == UserClaims.Id)!.Value;

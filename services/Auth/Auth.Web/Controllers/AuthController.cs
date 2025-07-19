@@ -2,6 +2,7 @@
 using Auth.Services.Contracts;
 using Jwt.Dto;
 using Jwt.Services.Contracts;
+using Jwt.Util;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,14 +47,14 @@ namespace Auth.Web.Controllers
             return Created(string.Empty, payload);
         }
 
-        [Authorize(AuthenticationSchemes = BearerTokenDefaults.AuthenticationScheme)]
+        [Authorize]
         [HttpPost("session")]
         public async Task<IActionResult> VerifySession([FromHeader(Name = "Authorization")] string? token)
         {
             UserClaimsDto claims = await jwtService.ReadTokenAsync(token);
             var payload = new AuthPayloadDto()
             {
-                Token = token!, // the Authorize attribute ensures that the token is there
+                Token = TokenUtil.RemoveBearer(token),
                 User = claims,
             };
 
