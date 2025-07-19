@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY ["/services/Auth/Auth.Web/Auth.Web.csproj", "Auth.Web/"]
+COPY ["/Auth.Web.csproj", "Auth.Web/"]
 RUN dotnet restore "Auth.Web/Auth.Web.csproj"
 
 COPY Auth.Web ./Auth.Web
