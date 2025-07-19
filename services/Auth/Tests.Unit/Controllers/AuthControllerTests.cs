@@ -155,5 +155,30 @@ namespace Tests.Unit.Controllers
             Assert.That(value?.Token, Is.EqualTo(token));
             Assert.That(value.User.Email, Is.EqualTo(claims.Email));
         }
+
+        [Test]
+        public async Task VerifySession_ReturnsCreatedWhenSuccessful()
+        {
+            // Arrange
+            string token = "a";
+            var claims = new UserClaimsDto()
+            {
+                Email = "abc@abc.com",
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            JwtService.ReadTokenAsync(token).Returns(claims);
+
+            // Act
+            var result = await Controller.VerifySession(token);
+
+            // Assert
+            var response = result as CreatedResult;
+            Assert.That(response?.StatusCode, Is.EqualTo(201));
+
+            var value = response.Value as AuthPayloadDto;
+            Assert.That(value?.Token, Is.EqualTo(token));
+            Assert.That(value.User.Email, Is.EqualTo(claims.Email));
+        }
     }
 }

@@ -2,6 +2,8 @@
 using Auth.Services.Contracts;
 using Jwt.Dto;
 using Jwt.Services.Contracts;
+using Microsoft.AspNetCore.Authentication.BearerToken;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OneOf.Types;
 
@@ -41,6 +43,20 @@ namespace Auth.Web.Controllers
 
             // returning an empty string for location for now, as the API isn't exposing
             // a details endpoint for users
+            return Created(string.Empty, payload);
+        }
+
+        [Authorize(AuthenticationSchemes = BearerTokenDefaults.AuthenticationScheme)]
+        [HttpPost("session")]
+        public async Task<IActionResult> VerifySession([FromHeader(Name = "Authorization")] string? token)
+        {
+            UserClaimsDto claims = await jwtService.ReadTokenAsync(token);
+            var payload = new AuthPayloadDto()
+            {
+                Token = token!, // the Authorize attribute ensures that the token is there
+                User = claims,
+            };
+
             return Created(string.Empty, payload);
         }
 
