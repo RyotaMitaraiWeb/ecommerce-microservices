@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Auth.Web.Controllers
 {
     [ApiController]
+    [Route("auth")]
 
     public class AuthController(IUserService userService, IJwtService jwtService) : ControllerBase
     {
