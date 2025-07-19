@@ -25,10 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Auth.Web\Auth.Web.csproj" />
     <ProjectReference Include="..\Auth\Auth.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\Database\Database.csproj" />
-    <ProjectReference Include="..\Jwt\Jwt.csproj" />
-    <ProjectReference Include="..\Tests.Util\Tests.Util.csproj" />
   </ItemGroup>
 
   <ItemGroup>

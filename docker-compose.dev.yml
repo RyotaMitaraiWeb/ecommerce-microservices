@@ -16,6 +16,9 @@ services:
       - AUTH_DB_NAME=auth
       - AUTH_DB_USERNAME=postgres
       - AUTH_DB_PASSWORD=A!strongpassword1234
+      - AUTH_JWT_SECRET=oknNKJNjknjkqnkjwnjkn3kjn23kjn23kjnklAlakmn
+      - AUTH_JWT_ISSUER=http://localhost:5000
+      - AUTH_JWT_AUDIENCE=ecommerceMicroservices
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
     ports:

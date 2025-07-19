@@ -6,6 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Jwt.Services.Contracts;
 using Jwt.Services;
+using Auth.Services.Contracts;
+using Auth.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Jwt.Constants;
 
 namespace Auth.Web.Extensions
 {
@@ -21,6 +27,7 @@ namespace Auth.Web.Extensions
                     options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     options.JsonSerializerOptions.WriteIndented = true;
+                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
@@ -57,7 +64,8 @@ namespace Auth.Web.Extensions
                 })
                 .AddLogging()
                 .AddCors()
-                .AddScoped<IJwtService, JwtService>();
+                .AddScoped<IJwtService, JwtService>()
+                .AddScoped<IUserService, UserService>();
         }
 
         public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
@@ -76,6 +84,38 @@ namespace Auth.Web.Extensions
             {
                 options.UseNpgsql(connectionUrl, b => b.MigrationsAssembly("Auth.Web"));
             });
+        }
+
+        public static IServiceCollection AddBearerAuthentication(this IServiceCollection services, WebApplicationBuilder builder)
+        {
+            services
+                .AddScoped<JwtBearerEvents>()
+                .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidAudience = builder.Configuration[ConfigurationKeys.Audience],
+                    ValidIssuer = builder.Configuration[ConfigurationKeys.Issuer],
+                    IssuerSigningKey = new
+                        SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration[ConfigurationKeys.Secret]!)),
+
+                };
+
+                options.EventsType = typeof(JwtBearerEvents);
+            });
+
+            return services;
+                
         }
     }
 }

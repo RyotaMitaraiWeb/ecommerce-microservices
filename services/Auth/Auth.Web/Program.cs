@@ -2,13 +2,14 @@ using Auth.Web.Extensions;
 
 namespace Auth.Web
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddServices(builder);
+            builder.Services.AddBearerAuthentication(builder);
             builder.Services.AddDatabase(builder);
 
             var app = builder.Build();
