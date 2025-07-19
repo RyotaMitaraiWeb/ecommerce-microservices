@@ -1,6 +1,4 @@
-﻿using Jwt.Dto;
-
-namespace Auth.Dto
+﻿namespace Jwt.Dto
 {
     public class AuthPayloadDto
     {
