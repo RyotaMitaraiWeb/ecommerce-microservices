@@ -87,7 +87,7 @@ namespace Tests.Unit.Controllers
             var value = response.Value as AuthPayloadDto;
 
             Assert.That(value?.Token, Is.EqualTo(token));
-            Assert.That(value.UserClaims.Email, Is.EqualTo(claims.Email));
+            Assert.That(value.User.Email, Is.EqualTo(claims.Email));
         }
 
         [Test]
@@ -153,7 +153,7 @@ namespace Tests.Unit.Controllers
             var value = response.Value as AuthPayloadDto;
 
             Assert.That(value?.Token, Is.EqualTo(token));
-            Assert.That(value.UserClaims.Email, Is.EqualTo(claims.Email));
+            Assert.That(value.User.Email, Is.EqualTo(claims.Email));
         }
     }
 }

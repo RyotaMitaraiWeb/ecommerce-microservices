@@ -61,7 +61,7 @@ namespace Auth.Web.Controllers
             return new AuthPayloadDto()
             {
                 Token = jwt.Token,
-                UserClaims = claims,
+                User = claims,
             };
         }
     }
