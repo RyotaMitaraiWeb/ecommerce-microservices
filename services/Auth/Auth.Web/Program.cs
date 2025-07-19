@@ -9,6 +9,7 @@ namespace Auth.Web
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddServices(builder);
+            builder.Services.AddBearerAuthentication(builder);
             builder.Services.AddDatabase(builder);
 
             var app = builder.Build();
