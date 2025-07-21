@@ -1,4 +1,6 @@
 using Auth.Web.Extensions;
+using Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Auth.Web
 {
@@ -15,6 +17,12 @@ namespace Auth.Web
             builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
 
             app.UseSwagger();
             app.UseSwaggerUI();
