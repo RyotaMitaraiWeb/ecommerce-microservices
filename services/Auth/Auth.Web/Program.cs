@@ -18,7 +18,7 @@ namespace Auth.Web
 
             var app = builder.Build();
 
-            Console.WriteLine("running!");
+            Console.WriteLine("running !");
 
             app.UseSwagger();
             app.UseSwaggerUI();
