@@ -3,6 +3,7 @@ name: E-Commerce microservices
 services:
   auth:
     container_name: auth_service
+    restart: always
     depends_on:
       auth_db:
         condition: service_healthy
@@ -23,6 +24,19 @@ services:
       - ASPNETCORE_URLS=http://+:80
     ports:
       - 5000:80
+  
+  products:
+    container_name: products_service
+    build:
+      context: ./services/Products
+      dockerfile: Dockerfile.dev
+    ports:
+      - 3000:3000
+    environment:
+      - PRODUCTS_DATABASE_CONNECTION=postgresql://postgres:A!strongpassword1234@products_db/products?schema=public&connect_timeout=30&pool_timeout=30&socket_timeout=30
+    depends_on:
+      products_db:
+        condition: service_healthy
   auth_db:
     container_name: auth_database
     image: postgres
@@ -39,6 +53,22 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./postgresql:/var/lib/postgresql/data
+  products_db:
+    image: postgres:16
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - 5433:5433
+    environment:
+      POSTGRES_PASSWORD: A!strongpassword1234
+      POSTGRES_DB: products
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./products-database:/var/lib/postgresql/data
   adminer:
     image: adminer
     restart: always
