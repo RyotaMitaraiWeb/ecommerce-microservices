@@ -13,3 +13,22 @@ datasource db {
   provider = "postgresql"
   url      = env("PRODUCTS_DATABASE_CONNECTION")
 }
+
+model Profile {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  email     String    @unique
+  firstName String
+  lastName  String
+  products  Product[]
+  confirmed Boolean   @default(false)
+}
+
+model Product {
+  id    Int    @id @default(autoincrement())
+  name  String
+  image String
+
+  seller   Profile  @relation(fields: [sellerId], references: [id])
+  sellerId String
+}
