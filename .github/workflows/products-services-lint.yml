@@ -1,5 +1,4 @@
-name: Product services tests
-
+name: Product services lint
 on:
   push:
     branches: [ "master" ]
