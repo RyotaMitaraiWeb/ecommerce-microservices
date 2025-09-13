@@ -4,6 +4,8 @@ services:
   auth:
     container_name: auth_service
     restart: always
+    command: >
+      -c ssl=of
     depends_on:
       auth_db:
         condition: service_healthy
@@ -62,7 +64,7 @@ services:
       timeout: 10s
       retries: 10
     ports:
-      - 5433:5433
+      - 5433:5432
     environment:
       POSTGRES_PASSWORD: A!strongpassword1234
       POSTGRES_DB: products
