@@ -11,8 +11,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   const config = new DocumentBuilder()
-    .setTitle('Courses')
-    .setDescription('API for courses web app')
+    .setTitle('Products')
+    .setDescription('API for products web app')
     .setVersion('1.0')
     .addBearerAuth(
       {
