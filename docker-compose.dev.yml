@@ -29,6 +29,9 @@ services:
   
   products:
     container_name: products_service
+    volumes:
+      - ./services/Products:/app
+      - /app/node_modules
     build:
       context: ./services/Products
       dockerfile: Dockerfile.dev

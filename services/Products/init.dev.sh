@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e 
 
 echo "Building NestJS project (generating Swagger schemas...)"
 npm run build
