@@ -35,7 +35,10 @@ services:
     ports:
       - 3000:3000
     environment:
-      - PRODUCTS_DATABASE_CONNECTION=postgresql://postgres:A!strongpassword1234@products_db/products?schema=public&connect_timeout=30&pool_timeout=30&socket_timeout=30
+      - POSTGRES_HOST=products_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=A!strongpassword1234
+      - POSTGRES_DB=products
     depends_on:
       products_db:
         condition: service_healthy
