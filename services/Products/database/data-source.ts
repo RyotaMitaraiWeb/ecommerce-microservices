@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
+import path from 'path';
 
 config();
 
@@ -13,6 +14,6 @@ export default new DataSource({
   entities: ['src/**/*.entity.ts'],
   migrationsTableName: 'custom_migration_table',
   synchronize: false,
-  migrations: ['database/migrations/*.ts'],
+  migrations: ['database/migrations/*{.ts,.js}'],
   ssl: false,
 });

@@ -39,7 +39,7 @@ services:
       - 3000:3000
     environment:
       - POSTGRES_HOST=products_db
-      - POSTGRES_PORT_MIGRATIONS=5433
+      - POSTGRES_PORT_MIGRATIONS=5432
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=A!strongpassword1234
