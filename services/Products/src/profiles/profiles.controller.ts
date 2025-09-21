@@ -8,7 +8,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
-import { ProfileDto } from './dto/ProfileDto';
+import { ProfileDto } from './dto/profile.dto';
 import { ClockService } from 'src/clock/clock.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 

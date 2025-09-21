@@ -4,7 +4,7 @@ import { ProfilesService } from './profiles.service';
 import { profileRepositoryStub } from './test-utils/stubs';
 import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
-import { ProfileDto } from './dto/ProfileDto';
+import { ProfileDto } from './dto/profile.dto';
 import { NotFoundException } from '@nestjs/common';
 import { createProfileBody, profile } from './test-utils/mocks';
 import { CreateErrors } from './types/CreateErrors';

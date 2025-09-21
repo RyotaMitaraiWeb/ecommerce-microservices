@@ -10,7 +10,7 @@ import {
   unconfirmedProfile,
 } from './test-utils/mocks';
 import { profileRepositoryStub } from './test-utils/stubs';
-import { ProfileDto } from './dto/ProfileDto';
+import { ProfileDto } from './dto/profile.dto';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { CreateErrors } from './types/CreateErrors';
 
