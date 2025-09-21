@@ -16,6 +16,17 @@ import { ProfileDto } from './dto/profile.dto';
 import { CreateErrors } from './types/CreateErrors';
 import { EditErrors } from './types/EditErrors';
 
+// Prevent state mutation from polluting our tests;
+const unconfirmedProfileCopy = { ...unconfirmedProfile };
+function provideUnconfirmedProfile() {
+  return { ...unconfirmedProfileCopy };
+}
+
+const confirmedProfileCopy = { ...profile };
+function provideConfirmedProfile() {
+  return { ...confirmedProfileCopy };
+}
+
 describe('ProfilesService', () => {
   let service: ProfilesService;
   let repository: Repository<Profile>;
@@ -28,6 +39,10 @@ describe('ProfilesService', () => {
 
     service = module.get<ProfilesService>(ProfilesService);
     repository = module.get(getRepositoryToken(Profile));
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -134,9 +149,22 @@ describe('ProfilesService', () => {
       expect(result.error).toBe(CreateErrors.IsAlreadyDeleted);
     });
 
-    it('Returns success if the profile was created successfully', async () => {
+    it('Returns "confirmed" error if the profile is confirmed', async () => {
       // Arrange
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
+
+      // Act
+      const result = await service.create(editProfileBody, 1, today);
+
+      // Assert
+      expect(result.error).toBe(CreateErrors.IsConfirmed);
+    });
+
+    it('Returns success if the profile was created successfully', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValueOnce(provideUnconfirmedProfile());
 
       // Act
       const result = await service.create(createProfileBody, 1, today);
@@ -171,20 +199,21 @@ describe('ProfilesService', () => {
 
     it('Returns "not confirmed" error if the profile is not confirmed', async () => {
       // Arrange
-      jest
-        .spyOn(repository, 'findOneBy')
-        .mockResolvedValueOnce(unconfirmedProfile);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(unconfirmedProfile);
 
       // Act
-      const result = await service.edit(editProfileBody, 1);
+      const result = await service.edit(editProfileBody, 15);
+      console.log(result);
 
       // Assert
       expect(result.error).toBe(EditErrors.IsNotConfirmed);
     });
 
-    it('Returns success if the profile was created successfully', async () => {
+    it('Returns success if the profile was edited successfully', async () => {
       // Arrange
-      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValueOnce(provideConfirmedProfile());
 
       // Act
       const result = await service.edit(editProfileBody, 1);

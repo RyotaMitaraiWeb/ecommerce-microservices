@@ -10,6 +10,7 @@ deletedProfile.email = 'deleted@gmail.com';
 deletedProfile.confirmed = true;
 deletedProfile.createdAt = new Date('01/01/2020');
 deletedProfile.deletedAt = new Date('02/02/2020');
+deletedProfile.confirmed = true;
 
 const unconfirmedProfile = new Profile();
 unconfirmedProfile.confirmed = false;

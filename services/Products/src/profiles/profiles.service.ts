@@ -58,6 +58,10 @@ export class ProfilesService {
       return Result.err(CreateErrors.IsAlreadyDeleted);
     }
 
+    if (profile.confirmed) {
+      return Result.err(CreateErrors.IsConfirmed);
+    }
+
     profile.confirmed = true;
     profile.firstName = details.firstName;
     profile.lastName = details.lastName;
