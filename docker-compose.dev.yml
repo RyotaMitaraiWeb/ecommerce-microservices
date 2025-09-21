@@ -4,8 +4,6 @@ services:
   auth:
     container_name: auth_service
     restart: always
-    command: >
-      -c ssl=of
     depends_on:
       auth_db:
         condition: service_healthy
@@ -29,6 +27,9 @@ services:
   
   products:
     container_name: products_service
+    volumes:
+      - ./services/Products:/app
+      - /app/node_modules
     build:
       context: ./services/Products
       dockerfile: Dockerfile.dev
@@ -36,6 +37,8 @@ services:
       - 3000:3000
     environment:
       - POSTGRES_HOST=products_db
+      - POSTGRES_PORT_MIGRATIONS=5432
+      - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=A!strongpassword1234
       - POSTGRES_DB=products

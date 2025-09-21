@@ -9,9 +9,8 @@ COPY . .
 
 RUN npm install --save-dev @nestjs/cli
 
-COPY init.dev.sh .
-RUN chmod +x init.dev.sh
+RUN chmod +x ./init.dev.sh
 
 EXPOSE 3000
 
-CMD ["sh", "init.dev.sh"]
+CMD ["sh", "./init.dev.sh"]
