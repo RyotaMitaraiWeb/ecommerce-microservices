@@ -1,4 +1,5 @@
 import { CreateProfileDto } from '../dto/create-profile.dto';
+import { EditProfileDto } from '../dto/edit-profile.dto';
 import { Profile } from '../entities/profile.entity';
 
 const deletedProfile = new Profile();
@@ -30,4 +31,14 @@ const createProfileBody = new CreateProfileDto();
 createProfileBody.firstName = 'John';
 createProfileBody.lastName = 'Doe';
 
-export { profile, deletedProfile, unconfirmedProfile, createProfileBody };
+const editProfileBody = new EditProfileDto();
+editProfileBody.firstName = 'Jane';
+editProfileBody.lastName = 'Doe';
+
+export {
+  profile,
+  deletedProfile,
+  unconfirmedProfile,
+  createProfileBody,
+  editProfileBody,
+};

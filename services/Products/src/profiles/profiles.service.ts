@@ -7,6 +7,8 @@ import { GetByIdErrors } from './types/GetByIdErrors';
 import { Result } from 'src/common/result/result';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { CreateErrors } from './types/CreateErrors';
+import { EditProfileDto } from './dto/edit-profile.dto';
+import { EditErrors } from './types/EditErrors';
 
 @Injectable()
 export class ProfilesService {
@@ -60,6 +62,31 @@ export class ProfilesService {
     profile.firstName = details.firstName;
     profile.lastName = details.lastName;
     profile.createdAt = today;
+
+    await this.repository.save(profile);
+
+    return Result.ok(undefined);
+  }
+
+  async edit(
+    details: EditProfileDto,
+    id: number,
+  ): Promise<Result<unknown, EditErrors>> {
+    const profile = await this.repository.findOneBy({ id });
+    if (!profile) {
+      return Result.err(EditErrors.NoAccountWithSuchId);
+    }
+
+    if (profile.deletedAt) {
+      return Result.err(EditErrors.IsDeleted);
+    }
+
+    if (!profile.confirmed) {
+      return Result.err(EditErrors.IsNotConfirmed);
+    }
+
+    profile.firstName = details.firstName;
+    profile.lastName = details.lastName;
 
     await this.repository.save(profile);
 
