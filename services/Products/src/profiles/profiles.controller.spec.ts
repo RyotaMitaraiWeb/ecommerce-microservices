@@ -104,7 +104,7 @@ describe('ProfilesController', () => {
       expect(result.id).toBe(1);
     });
 
-    it.each([[CreateErrors.NoAccountWithSuchId]])(
+    it.each([[CreateErrors.NoAccountWithSuchId], [CreateErrors.IsConfirmed]])(
       'Throws a 404 error if the service returns an error',
       async (error: CreateErrors) => {
         // Arrange
