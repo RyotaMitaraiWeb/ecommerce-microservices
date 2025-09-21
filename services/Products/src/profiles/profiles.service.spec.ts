@@ -11,10 +11,17 @@ import {
 } from './test-utils/mocks';
 import { profileRepositoryStub } from './test-utils/stubs';
 import { ProfileDto } from './dto/ProfileDto';
+import { CreateProfileDto } from './dto/create-profile.dto';
+import { CreateErrors } from './types/CreateErrors';
 
 describe('ProfilesService', () => {
   let service: ProfilesService;
   let repository: Repository<Profile>;
+
+  const createProfileDetails = new CreateProfileDto();
+  createProfileDetails.firstName = 'John';
+  createProfileDetails.lastName = 'Doe';
+  const today = new Date(Date.now());
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -103,6 +110,41 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.value).toEqual([]);
+    });
+  });
+
+  describe('create', () => {
+    it('Returns "profile does not exist" error if no profile with the given ID can be found', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
+
+      // Act
+      const result = await service.create(createProfileDetails, 1, today);
+
+      // Assert
+      expect(result.error).toBe(CreateErrors.NoAccountWithSuchId);
+    });
+
+    it('Returns "profile deleted" error if the profile was deleted', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(deletedProfile);
+
+      // Act
+      const result = await service.create(createProfileDetails, 1, today);
+
+      // Assert
+      expect(result.error).toBe(CreateErrors.IsAlreadyDeleted);
+    });
+
+    it('Returns success if the profile was created successfully', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
+
+      // Act
+      const result = await service.create(createProfileDetails, 1, today);
+
+      // Assert
+      expect(result.isOk).toBe(true);
     });
   });
 });

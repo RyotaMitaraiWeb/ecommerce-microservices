@@ -5,6 +5,8 @@ import { Profile } from './entities/profile.entity';
 import { ProfileDto } from './dto/ProfileDto';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { Result } from 'src/common/result/result';
+import { CreateProfileDto } from './dto/create-profile.dto';
+import { CreateErrors } from './types/CreateErrors';
 
 @Injectable()
 export class ProfilesService {
@@ -38,5 +40,29 @@ export class ProfilesService {
     });
 
     return Result.ok(profiles.map((profile) => ProfileDto.MapToDto(profile)));
+  }
+
+  async create(
+    details: CreateProfileDto,
+    id: number,
+    today: Date,
+  ): Promise<Result<unknown, CreateErrors>> {
+    const profile = await this.repository.findOneBy({ id });
+    if (!profile) {
+      return Result.err(CreateErrors.NoAccountWithSuchId);
+    }
+
+    if (profile.deletedAt) {
+      return Result.err(CreateErrors.IsAlreadyDeleted);
+    }
+
+    profile.confirmed = true;
+    profile.firstName = details.firstName;
+    profile.lastName = details.lastName;
+    profile.createdAt = today;
+
+    await this.repository.save(profile);
+
+    return Result.ok(undefined);
   }
 }
