@@ -6,7 +6,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import {
   createProfileBody,
-  deletedProfile,
   editProfileBody,
   profile,
   unconfirmedProfile,
@@ -60,17 +59,6 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.error).toBe(GetByIdErrors.DoesNotExist);
-    });
-
-    it('Returns deleted error if it returns a deleted profile', async () => {
-      // Arrange
-      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(deletedProfile);
-
-      // Act
-      const result = await service.getById(1);
-
-      // Assert
-      expect(result.error).toBe(GetByIdErrors.IsDeleted);
     });
 
     it('Returns not confirmed error if the profile is not confirmed', async () => {
@@ -139,17 +127,6 @@ describe('ProfilesService', () => {
       expect(result.error).toBe(CreateErrors.NoAccountWithSuchId);
     });
 
-    it('Returns "profile deleted" error if the profile was deleted', async () => {
-      // Arrange
-      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(deletedProfile);
-
-      // Act
-      const result = await service.create(createProfileBody, 1, today);
-
-      // Assert
-      expect(result.error).toBe(CreateErrors.IsAlreadyDeleted);
-    });
-
     it('Returns "confirmed" error if the profile is confirmed', async () => {
       // Arrange
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
@@ -185,17 +162,6 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.error).toBe(EditErrors.NoAccountWithSuchId);
-    });
-
-    it('Returns "profile deleted" error if the profile was deleted', async () => {
-      // Arrange
-      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(deletedProfile);
-
-      // Act
-      const result = await service.edit(editProfileBody, 1);
-
-      // Assert
-      expect(result.error).toBe(EditErrors.IsDeleted);
     });
 
     it('Returns "not confirmed" error if the profile is not confirmed', async () => {

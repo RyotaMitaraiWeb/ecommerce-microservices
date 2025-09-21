@@ -24,10 +24,6 @@ export class ProfilesService {
       return Result.err(GetByIdErrors.DoesNotExist);
     }
 
-    if (profile.deletedAt) {
-      return Result.err(GetByIdErrors.IsDeleted);
-    }
-
     if (!profile.confirmed) {
       return Result.err(GetByIdErrors.NotConfirmed);
     }
@@ -55,10 +51,6 @@ export class ProfilesService {
       return Result.err(CreateErrors.NoAccountWithSuchId);
     }
 
-    if (profile.deletedAt) {
-      return Result.err(CreateErrors.IsAlreadyDeleted);
-    }
-
     if (profile.confirmed) {
       return Result.err(CreateErrors.IsConfirmed);
     }
@@ -80,10 +72,6 @@ export class ProfilesService {
     const profile = await this.repository.findOneBy({ id });
     if (!profile) {
       return Result.err(EditErrors.NoAccountWithSuchId);
-    }
-
-    if (profile.deletedAt) {
-      return Result.err(EditErrors.IsDeleted);
     }
 
     if (!profile.confirmed) {

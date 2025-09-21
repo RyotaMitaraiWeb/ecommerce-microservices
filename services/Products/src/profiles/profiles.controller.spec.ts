@@ -39,20 +39,19 @@ describe('ProfilesController', () => {
   });
 
   describe('getProfileById', () => {
-    it.each([
-      [GetByIdErrors.DoesNotExist],
-      [GetByIdErrors.IsDeleted],
-      [GetByIdErrors.NotConfirmed],
-    ])('Throws a 404 exception if an error is returned', async (error) => {
-      // Arrange
-      const mockResult = Result.err<ProfileDto, GetByIdErrors>(error);
-      jest.spyOn(profileService, 'getById').mockResolvedValueOnce(mockResult);
+    it.each([[GetByIdErrors.DoesNotExist], [GetByIdErrors.NotConfirmed]])(
+      'Throws a 404 exception if an error is returned',
+      async (error) => {
+        // Arrange
+        const mockResult = Result.err<ProfileDto, GetByIdErrors>(error);
+        jest.spyOn(profileService, 'getById').mockResolvedValueOnce(mockResult);
 
-      // Act & Assert
-      await expect(() => controller.getProfileById(1)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+        // Act & Assert
+        await expect(() => controller.getProfileById(1)).rejects.toThrow(
+          NotFoundException,
+        );
+      },
+    );
 
     it('Returns a profile if successful', async () => {
       // Arrange
@@ -105,10 +104,7 @@ describe('ProfilesController', () => {
       expect(result.id).toBe(1);
     });
 
-    it.each([
-      [CreateErrors.IsAlreadyDeleted],
-      [CreateErrors.NoAccountWithSuchId],
-    ])(
+    it.each([[CreateErrors.NoAccountWithSuchId]])(
       'Throws a 404 error if the service returns an error',
       async (error: CreateErrors) => {
         // Arrange
@@ -139,11 +135,7 @@ describe('ProfilesController', () => {
       expect(result).toBeUndefined();
     });
 
-    it.each([
-      [EditErrors.IsDeleted],
-      [EditErrors.IsNotConfirmed],
-      [EditErrors.NoAccountWithSuchId],
-    ])(
+    it.each([[EditErrors.IsNotConfirmed], [EditErrors.NoAccountWithSuchId]])(
       'Throws a 404 error if the service returns an error',
       async (error: EditErrors) => {
         // Arrange
