@@ -15,6 +15,7 @@ import { CreateErrors } from './types/CreateErrors';
 import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
+import { DeleteErrors } from './types/DeleteErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -156,5 +157,30 @@ describe('ProfilesController', () => {
         ).rejects.toThrow(NotFoundException);
       },
     );
+  });
+
+  describe('deleteProfile', () => {
+    it('Returns success if successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<unknown, DeleteErrors>(undefined);
+      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.deleteProfile(1);
+
+      // Assert
+      expect(result).toBeUndefined();
+    });
+
+    it('Throws a 404 exception if no profile is found', async () => {
+      // Arrange
+      const mockResult = Result.err(DeleteErrors.DoesNotExist);
+      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.deleteProfile(1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 });
