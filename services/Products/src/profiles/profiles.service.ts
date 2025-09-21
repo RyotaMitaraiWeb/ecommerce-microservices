@@ -9,6 +9,7 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { CreateErrors } from './types/CreateErrors';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { EditErrors } from './types/EditErrors';
+import { DeleteErrors } from './types/DeleteErrors';
 
 @Injectable()
 export class ProfilesService {
@@ -93,6 +94,15 @@ export class ProfilesService {
     profile.lastName = details.lastName;
 
     await this.repository.save(profile);
+
+    return Result.ok(undefined);
+  }
+
+  async delete(id: number): Promise<Result<unknown, DeleteErrors>> {
+    const profile = await this.repository.findOneBy({ id });
+    if (!profile) {
+      return Result.err(DeleteErrors.DoesNotExist);
+    }
 
     return Result.ok(undefined);
   }

@@ -15,6 +15,7 @@ import { profileRepositoryStub } from './test-utils/stubs';
 import { ProfileDto } from './dto/profile.dto';
 import { CreateErrors } from './types/CreateErrors';
 import { EditErrors } from './types/EditErrors';
+import { DeleteErrors } from './types/DeleteErrors';
 
 // Prevent state mutation from polluting our tests;
 const unconfirmedProfileCopy = { ...unconfirmedProfile };
@@ -220,6 +221,30 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.isOk).toBe(true);
+    });
+  });
+
+  describe('delete', () => {
+    it('Returns a "does not exist" error if no profile can be found', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
+
+      // Act
+      const result = await service.delete(1);
+
+      // Assert
+      expect(result.error).toBe(DeleteErrors.DoesNotExist);
+    });
+
+    it('Returns success if a profile is deleted', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
+
+      // Act
+      const result = await service.delete(1);
+
+      // Assert
+      expect(result.value).toBeUndefined();
     });
   });
 });

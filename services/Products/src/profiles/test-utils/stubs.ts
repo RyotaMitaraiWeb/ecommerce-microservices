@@ -10,5 +10,6 @@ export const profileRepositoryStub = {
     delete: jest.fn(),
     findBy: jest.fn(),
     find: jest.fn(),
+    softDelete: jest.fn(),
   },
 };
