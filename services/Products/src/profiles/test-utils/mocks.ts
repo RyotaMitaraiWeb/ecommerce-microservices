@@ -1,3 +1,4 @@
+import { CreateProfileDto } from '../dto/create-profile.dto';
 import { Profile } from '../entities/profile.entity';
 
 const deletedProfile = new Profile();
@@ -25,4 +26,8 @@ profile.firstName = 'Ryota';
 profile.lastName = 'Mitarai';
 profile.email = 'ryota@gmail.com';
 
-export { profile, deletedProfile, unconfirmedProfile };
+const createProfileBody = new CreateProfileDto();
+createProfileBody.firstName = 'John';
+createProfileBody.lastName = 'Doe';
+
+export { profile, deletedProfile, unconfirmedProfile, createProfileBody };

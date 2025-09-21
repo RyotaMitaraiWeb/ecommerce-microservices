@@ -6,20 +6,26 @@ import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { ProfileDto } from './dto/ProfileDto';
 import { NotFoundException } from '@nestjs/common';
-import { profile } from './test-utils/mocks';
+import { createProfileBody, profile } from './test-utils/mocks';
+import { CreateErrors } from './types/CreateErrors';
+import { ClockService } from 'src/clock/clock.service';
+import { ClockModule } from 'src/clock/clock.module';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
   let profileService: ProfilesService;
+  let clock: ClockService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProfilesController],
       providers: [ProfilesService, profileRepositoryStub],
+      imports: [ClockModule],
     }).compile();
 
     controller = module.get<ProfilesController>(ProfilesController);
     profileService = module.get(ProfilesService);
+    clock = module.get(ClockService);
   });
 
   it('should be defined', () => {
@@ -73,6 +79,43 @@ describe('ProfilesController', () => {
 
         // Assert
         expect(result).toEqual(profiles);
+      },
+    );
+  });
+
+  describe('createProfile', () => {
+    it('Returns the provided ID if successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<unknown, CreateErrors>(undefined);
+      const mockDate = new Date('01/01/2020');
+
+      jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+      jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.createProfile(1, createProfileBody);
+
+      // Assert
+      expect(result.id).toBe(1);
+    });
+
+    it.each([
+      [CreateErrors.IsAlreadyDeleted],
+      [CreateErrors.NoAccountWithSuchId],
+    ])(
+      'Throws a 404 error if the service returns an error',
+      async (error: CreateErrors) => {
+        // Arrange
+        const mockResult = Result.err(error);
+        const mockDate = new Date('01/01/2020');
+
+        jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+        jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+
+        // Act & Assert
+        await expect(() =>
+          controller.createProfile(1, createProfileBody),
+        ).rejects.toThrow(NotFoundException);
       },
     );
   });

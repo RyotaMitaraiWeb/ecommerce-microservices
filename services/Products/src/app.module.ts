@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ProfilesModule } from './profiles/profiles.module';
+import { ClockModule } from './clock/clock.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ProfilesModule } from './profiles/profiles.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
     }),
     ProfilesModule,
+    ClockModule,
   ],
   controllers: [AppController],
   providers: [AppService],
