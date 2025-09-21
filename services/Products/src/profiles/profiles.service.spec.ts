@@ -9,6 +9,7 @@ import {
   profile,
   unconfirmedProfile,
 } from './test-utils/mocks';
+import { profileRepositoryStub } from './test-utils/stubs';
 
 describe('ProfilesService', () => {
   let service: ProfilesService;
@@ -16,18 +17,7 @@ describe('ProfilesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProfilesService,
-        {
-          provide: getRepositoryToken(Profile),
-          useValue: {
-            findOneBy: jest.fn(),
-            save: jest.fn(),
-            create: jest.fn(),
-            delete: jest.fn(),
-          },
-        },
-      ],
+      providers: [ProfilesService, profileRepositoryStub],
     }).compile();
 
     service = module.get<ProfilesService>(ProfilesService);
