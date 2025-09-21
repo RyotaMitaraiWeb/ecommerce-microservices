@@ -6,10 +6,15 @@ import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { ProfileDto } from './dto/profile.dto';
 import { NotFoundException } from '@nestjs/common';
-import { createProfileBody, profile } from './test-utils/mocks';
+import {
+  createProfileBody,
+  editProfileBody,
+  profile,
+} from './test-utils/mocks';
 import { CreateErrors } from './types/CreateErrors';
 import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
+import { EditErrors } from './types/EditErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -115,6 +120,39 @@ describe('ProfilesController', () => {
         // Act & Assert
         await expect(() =>
           controller.createProfile(1, createProfileBody),
+        ).rejects.toThrow(NotFoundException);
+      },
+    );
+  });
+
+  describe('editProfile', () => {
+    it('Returns undefined if successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<unknown, EditErrors>(undefined);
+      jest.spyOn(profileService, 'edit').mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.editProfile(1, editProfileBody);
+
+      // Assert
+      expect(result).toBeUndefined();
+    });
+
+    it.each([
+      [EditErrors.IsDeleted],
+      [EditErrors.IsNotConfirmed],
+      [EditErrors.NoAccountWithSuchId],
+    ])(
+      'Throws a 404 error if the service returns an error',
+      async (error: EditErrors) => {
+        // Arrange
+        const mockResult = Result.err(error);
+
+        jest.spyOn(profileService, 'edit').mockResolvedValueOnce(mockResult);
+
+        // Act & Assert
+        await expect(() =>
+          controller.editProfile(1, editProfileBody),
         ).rejects.toThrow(NotFoundException);
       },
     );
