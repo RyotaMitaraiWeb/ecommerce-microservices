@@ -10,6 +10,7 @@ import {
   unconfirmedProfile,
 } from './test-utils/mocks';
 import { profileRepositoryStub } from './test-utils/stubs';
+import { ProfileDto } from './dto/ProfileDto';
 
 describe('ProfilesService', () => {
   let service: ProfilesService;
@@ -76,6 +77,32 @@ describe('ProfilesService', () => {
       expect(result.value.lastName).toBe(profile.lastName);
       expect(result.value.id).toBe(profile.id);
       expect(result.value.joinDate).toBe(profile.createdAt);
+    });
+  });
+
+  describe('get', () => {
+    it('Returns an array of profiles', async () => {
+      // Arrange
+      jest.spyOn(repository, 'find').mockResolvedValueOnce([profile]);
+
+      // Act
+      const result = await service.get();
+
+      // Assert
+      expect(result.value).toEqual(
+        [profile].map((p) => ProfileDto.MapToDto(p)),
+      );
+    });
+
+    it('Works correctly when the result is an empty array', async () => {
+      // Arrange
+      jest.spyOn(repository, 'find').mockResolvedValueOnce([]);
+
+      // Act
+      const result = await service.get();
+
+      // Assert
+      expect(result.value).toEqual([]);
     });
   });
 });

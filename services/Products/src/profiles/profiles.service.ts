@@ -29,4 +29,14 @@ export class ProfilesService {
 
     return Result.ok(ProfileDto.MapToDto(profile));
   }
+
+  async get(): Promise<Result<ProfileDto[], unknown>> {
+    const profiles = await this.repository.find({
+      where: {
+        confirmed: true,
+      },
+    });
+
+    return Result.ok(profiles.map((profile) => ProfileDto.MapToDto(profile)));
+  }
 }

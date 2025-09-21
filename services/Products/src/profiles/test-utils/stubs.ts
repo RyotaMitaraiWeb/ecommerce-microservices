@@ -8,5 +8,7 @@ export const profileRepositoryStub = {
     save: jest.fn(),
     create: jest.fn(),
     delete: jest.fn(),
+    findBy: jest.fn(),
+    find: jest.fn(),
   },
 };
