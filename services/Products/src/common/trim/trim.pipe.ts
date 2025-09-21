@@ -1,7 +1,6 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
 
-type TrimmableValue = string | object | TrimmableValue[];
-type TrimmedValue = TrimmableValue;
+type TrimmedValue = string | object | TrimmedValue[];
 
 @Injectable()
 export class TrimPipe implements PipeTransform {
