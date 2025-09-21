@@ -57,4 +57,23 @@ describe('ProfilesController', () => {
       expect(result).toEqual(mockResult.value);
     });
   });
+
+  describe('getAllProfiles', () => {
+    const noProfiles = [];
+
+    it.each([[noProfiles], [[ProfileDto.MapToDto(profile)]]])(
+      'Returns a list of profiles',
+      async (profiles) => {
+        // Arrange
+        const mockResult = Result.ok(profiles);
+        jest.spyOn(profileService, 'get').mockResolvedValueOnce(mockResult);
+
+        // Act
+        const result = await controller.getAllProfiles();
+
+        // Assert
+        expect(result).toEqual(profiles);
+      },
+    );
+  });
 });
