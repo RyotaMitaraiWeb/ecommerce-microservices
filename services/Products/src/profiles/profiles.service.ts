@@ -10,6 +10,7 @@ import { CreateErrors } from './types/CreateErrors';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { EditErrors } from './types/EditErrors';
 import { DeleteErrors } from './types/DeleteErrors';
+import { Mapper } from 'src/common/mapper/Mapper';
 
 @Injectable()
 export class ProfilesService {
@@ -28,7 +29,7 @@ export class ProfilesService {
       return Result.err(GetByIdErrors.NotConfirmed);
     }
 
-    return Result.ok(ProfileDto.mapToDto(profile));
+    return Result.ok(Mapper.profile.toDto(profile));
   }
 
   async get(): Promise<Result<ProfileDto[], unknown>> {
@@ -38,7 +39,7 @@ export class ProfilesService {
       },
     });
 
-    return Result.ok(profiles.map((profile) => ProfileDto.mapToDto(profile)));
+    return Result.ok(profiles.map((profile) => Mapper.profile.toDto(profile)));
   }
 
   async create(

@@ -11,10 +11,10 @@ import {
   unconfirmedProfile,
 } from './test-utils/mocks';
 import { profileRepositoryStub } from './test-utils/stubs';
-import { ProfileDto } from './dto/profile.dto';
 import { CreateErrors } from './types/CreateErrors';
 import { EditErrors } from './types/EditErrors';
 import { DeleteErrors } from './types/DeleteErrors';
+import { Mapper } from 'src/common/mapper/Mapper';
 
 // Prevent state mutation from polluting our tests;
 const unconfirmedProfileCopy = { ...unconfirmedProfile };
@@ -99,7 +99,7 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.value).toEqual(
-        [profile].map((p) => ProfileDto.mapToDto(p)),
+        [profile].map((p) => Mapper.profile.toDto(p)),
       );
     });
 

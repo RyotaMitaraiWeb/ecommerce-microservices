@@ -15,6 +15,7 @@ import { CreateErrors } from './types/CreateErrors';
 import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
+import { Mapper } from 'src/common/mapper/Mapper';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -55,7 +56,7 @@ describe('ProfilesController', () => {
     it('Returns a profile if successful', async () => {
       // Arrange
       const mockResult = Result.ok<ProfileDto, GetByIdErrors>(
-        ProfileDto.mapToDto(profile),
+        Mapper.profile.toDto(profile),
       );
 
       jest.spyOn(profileService, 'getById').mockResolvedValueOnce(mockResult);
@@ -71,7 +72,7 @@ describe('ProfilesController', () => {
   describe('getAllProfiles', () => {
     const noProfiles = [];
 
-    it.each([[noProfiles], [[ProfileDto.mapToDto(profile)]]])(
+    it.each([[noProfiles], [[Mapper.profile.toDto(profile)]]])(
       'Returns a list of profiles',
       async (profiles) => {
         // Arrange
