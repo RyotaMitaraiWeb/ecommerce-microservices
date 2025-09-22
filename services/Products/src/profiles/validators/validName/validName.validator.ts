@@ -4,6 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { nameErrorMessages } from 'src/profiles/constants/erroMessages';
 
 const NAME_REGEX = /^[\p{L}](?:[\p{L}\p{M}']*(?:[- ][\p{L}\p{M}']+)*)?$/u;
 
@@ -15,12 +16,12 @@ class IsLegalNameConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage() {
-    return 'Name must start and end with a letter and can only contain letters, spaces, hyphens, or apostrophes.';
+    return nameErrorMessages.illegal;
   }
 }
 
 /**
- * Decorator to validate a legal first name internationally.
+ * Decorator to validate a legal name internationally.
  */
 export function IsLegalName(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
