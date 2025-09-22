@@ -150,29 +150,4 @@ describe('ProfilesController', () => {
       },
     );
   });
-
-  describe('deleteProfile', () => {
-    it('Returns success if successful', async () => {
-      // Arrange
-      const mockResult = Result.ok<unknown, DeleteErrors>(undefined);
-      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
-
-      // Act
-      const result = await controller.deleteProfile(1);
-
-      // Assert
-      expect(result).toBeUndefined();
-    });
-
-    it('Throws a 404 exception if no profile is found', async () => {
-      // Arrange
-      const mockResult = Result.err(DeleteErrors.DoesNotExist);
-      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
-
-      // Act & Assert
-      await expect(() => controller.deleteProfile(1)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-  });
 });

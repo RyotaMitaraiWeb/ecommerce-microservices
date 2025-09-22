@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -64,16 +63,6 @@ export class ProfilesController {
     @Body() details: EditProfileDto,
   ) {
     const result = await this.profilesService.edit(details, id);
-
-    if (result.isErr) {
-      throw new NotFoundException();
-    }
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  public async deleteProfile(@Param('id', ParseIntPipe) id: number) {
-    const result = await this.profilesService.delete(id);
 
     if (result.isErr) {
       throw new NotFoundException();
