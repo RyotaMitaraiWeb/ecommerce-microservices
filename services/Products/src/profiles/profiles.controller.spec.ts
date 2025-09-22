@@ -15,7 +15,6 @@ import { CreateErrors } from './types/CreateErrors';
 import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
-import { DeleteErrors } from './types/DeleteErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
