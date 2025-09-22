@@ -170,7 +170,6 @@ describe('ProfilesService', () => {
 
       // Act
       const result = await service.edit(editProfileBody, 15);
-      console.log(result);
 
       // Assert
       expect(result.error).toBe(EditErrors.IsNotConfirmed);
