@@ -15,6 +15,11 @@ import { ProfileDto } from './dto/profile.dto';
 import { ClockService } from 'src/clock/clock.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { EditProfileDto } from './dto/edit-profile.dto';
+import {
+  createProfileErrorMessages,
+  editProfileErrorMessages,
+  getProfileErrorMessages,
+} from './constants/erroMessages';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -29,7 +34,7 @@ export class ProfilesController {
   ): Promise<ProfileDto> {
     const result = await this.profilesService.getById(id);
     if (result.isErr) {
-      throw new NotFoundException();
+      throw new NotFoundException(getProfileErrorMessages.doesNotExist);
     }
 
     return result.value;
@@ -50,7 +55,7 @@ export class ProfilesController {
     const result = await this.profilesService.create(details, id, today);
 
     if (result.isErr) {
-      throw new NotFoundException();
+      throw new NotFoundException(createProfileErrorMessages[result.error]);
     }
 
     return { id };
@@ -65,7 +70,7 @@ export class ProfilesController {
     const result = await this.profilesService.edit(details, id);
 
     if (result.isErr) {
-      throw new NotFoundException();
+      throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
 }
