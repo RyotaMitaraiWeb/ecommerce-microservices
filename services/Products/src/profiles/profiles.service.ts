@@ -28,7 +28,7 @@ export class ProfilesService {
       return Result.err(GetByIdErrors.NotConfirmed);
     }
 
-    return Result.ok(ProfileDto.MapToDto(profile));
+    return Result.ok(ProfileDto.mapToDto(profile));
   }
 
   async get(): Promise<Result<ProfileDto[], unknown>> {
@@ -38,7 +38,7 @@ export class ProfilesService {
       },
     });
 
-    return Result.ok(profiles.map((profile) => ProfileDto.MapToDto(profile)));
+    return Result.ok(profiles.map((profile) => ProfileDto.mapToDto(profile)));
   }
 
   async create(

@@ -55,7 +55,7 @@ describe('ProfilesController', () => {
     it('Returns a profile if successful', async () => {
       // Arrange
       const mockResult = Result.ok<ProfileDto, GetByIdErrors>(
-        ProfileDto.MapToDto(profile),
+        ProfileDto.mapToDto(profile),
       );
 
       jest.spyOn(profileService, 'getById').mockResolvedValueOnce(mockResult);
@@ -71,7 +71,7 @@ describe('ProfilesController', () => {
   describe('getAllProfiles', () => {
     const noProfiles = [];
 
-    it.each([[noProfiles], [[ProfileDto.MapToDto(profile)]]])(
+    it.each([[noProfiles], [[ProfileDto.mapToDto(profile)]]])(
       'Returns a list of profiles',
       async (profiles) => {
         // Arrange

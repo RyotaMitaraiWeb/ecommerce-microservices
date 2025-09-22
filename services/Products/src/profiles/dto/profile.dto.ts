@@ -6,7 +6,7 @@ export class ProfileDto {
   lastName: string;
   joinDate: Date;
 
-  static MapToDto(profile: Profile): ProfileDto {
+  static mapToDto(profile: Profile): ProfileDto {
     const dto = new ProfileDto();
     dto.id = profile.id;
     dto.firstName = profile.firstName;

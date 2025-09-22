@@ -99,7 +99,7 @@ describe('ProfilesService', () => {
 
       // Assert
       expect(result.value).toEqual(
-        [profile].map((p) => ProfileDto.MapToDto(p)),
+        [profile].map((p) => ProfileDto.mapToDto(p)),
       );
     });
 
