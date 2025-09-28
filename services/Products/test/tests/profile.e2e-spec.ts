@@ -73,4 +73,18 @@ describe('ProfilesController (e2e)', () => {
       expect(body.message).toBe(getProfileErrorMessages.doesNotExist);
     });
   });
+
+  describe('endpoint "/" (GET)', () => {
+    it('Returns a list of profiles', async () => {
+      const validProfiles = profiles.filter(
+        (profile) => !profile.deletedAt && profile.confirmed,
+      );
+
+      const response = await request(app.getHttpServer()).get('/profiles');
+      expect(response.status).toBe(HttpStatus.OK);
+      const body = response.body as ProfileDto[];
+
+      expect(body.length).toBe(validProfiles.length);
+    });
+  });
 });
