@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
+import { restartTables } from './util/restartTables';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -10,12 +11,7 @@ describe('AppController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    await global.__DATASOURCE__.dropDatabase();
-  });
-
-  afterAll(async () => {
-    await global.__POSTGRESCONTAINER__.stop();
-    await global.__NESTAPP__.close();
+    await restartTables(global.__DATASOURCE__);
   });
 
   it('Healthcheck test', () => {
