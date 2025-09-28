@@ -8,7 +8,12 @@ import { App } from 'supertest/types';
 import { restartTables } from '../util/restartTables';
 import { profiles } from '../seeders/seedProfiles';
 import { ProfileDto } from 'src/profiles/dto/profile.dto';
-import { getProfileErrorMessages } from 'src/profiles/constants/erroMessages';
+import {
+  editProfileErrorMessages,
+  getProfileErrorMessages,
+} from 'src/profiles/constants/erroMessages';
+import { EditProfileDto } from 'src/profiles/dto/edit-profile.dto';
+import { EditErrors } from 'src/profiles/types/EditErrors';
 
 describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -85,6 +90,87 @@ describe('ProfilesController (e2e)', () => {
       const body = response.body as ProfileDto[];
 
       expect(body.length).toBe(validProfiles.length);
+    });
+  });
+
+  describe('endpoint "/" (PATCH)', () => {
+    it('Edits a profile successfully', async () => {
+      const profile = profiles.find(
+        (profile) => profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const requestBody = new EditProfileDto();
+      requestBody.firstName = 'Ryota';
+      requestBody.lastName = 'Mitarai';
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send(requestBody);
+
+      expect(response.status).toBe(HttpStatus.NO_CONTENT);
+
+      const editedProfileResponse = await request(app.getHttpServer()).get(
+        `/profiles/${profile.id}`,
+      );
+
+      const editedProfile = editedProfileResponse.body as ProfileDto;
+      expect(editedProfile.firstName).toBe('Ryota');
+      expect(editedProfile.lastName).toBe('Mitarai');
+    });
+
+    it('Returns 404 if the profile is not confirmed', async () => {
+      const profile = profiles.find((profile) => !profile.confirmed)!;
+
+      const requestBody = new EditProfileDto();
+      requestBody.firstName = 'Ryota';
+      requestBody.lastName = 'Mitarai';
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send(requestBody);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      const body = response.body as NotFoundException;
+
+      expect(body.message).toBe(
+        editProfileErrorMessages[EditErrors.IsNotConfirmed],
+      );
+    });
+
+    it('Returns 404 if the profile is deleted', async () => {
+      const profile = profiles.find((profile) => !!profile.deletedAt)!;
+
+      const requestBody = new EditProfileDto();
+      requestBody.firstName = 'Ryota';
+      requestBody.lastName = 'Mitarai';
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send(requestBody);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      const body = response.body as NotFoundException;
+
+      expect(body.message).toBe(
+        editProfileErrorMessages[EditErrors.NoAccountWithSuchId],
+      );
+    });
+
+    it('Returns 404 if no profile with the given ID is found', async () => {
+      const requestBody = new EditProfileDto();
+      requestBody.firstName = 'Ryota';
+      requestBody.lastName = 'Mitarai';
+
+      const response = await request(app.getHttpServer())
+        .patch('/profiles/15555')
+        .send(requestBody);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      const body = response.body as NotFoundException;
+
+      expect(body.message).toBe(
+        editProfileErrorMessages[EditErrors.NoAccountWithSuchId],
+      );
     });
   });
 });
