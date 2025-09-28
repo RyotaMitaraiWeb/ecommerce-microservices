@@ -93,7 +93,7 @@ describe('ProfilesController (e2e)', () => {
     });
   });
 
-  describe('endpoint "/" (PATCH)', () => {
+  describe('endpoint "/{id}" (PATCH)', () => {
     it('Edits a profile successfully', async () => {
       const profile = profiles.find(
         (profile) => profile.confirmed && !profile.deletedAt,
