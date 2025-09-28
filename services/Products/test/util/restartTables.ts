@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import { seedProfiles } from '../seeders/seedProfiles';
 import { DataSource } from 'typeorm';
 
 export async function restartTables(dataSource: DataSource) {
@@ -6,4 +8,6 @@ export async function restartTables(dataSource: DataSource) {
       `TRUNCATE TABLE "${entity.tableName}" RESTART IDENTITY CASCADE;`,
     );
   }
+
+  await seedProfiles(dataSource);
 }
