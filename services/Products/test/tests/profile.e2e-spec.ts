@@ -1,8 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 
-describe('AppController (e2e)', () => {
+describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeAll(() => {
@@ -18,10 +18,10 @@ describe('AppController (e2e)', () => {
     await global.__NESTAPP__.close();
   });
 
-  it('Healthcheck test', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  describe('endpoint "/" (GET)', () => {
+    it('Returns 404 if the profile cannot be found', async () => {
+      const response = await request(app.getHttpServer()).get('/profile/1500');
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    });
   });
 });
