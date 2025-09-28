@@ -5,7 +5,7 @@ import { profileRepositoryStub } from './test-utils/stubs';
 import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { ProfileDto } from './dto/profile.dto';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import {
   createProfileBody,
   editProfileBody,
@@ -135,9 +135,12 @@ describe('ProfilesController', () => {
       expect(result).toBeUndefined();
     });
 
-    it.each([[EditErrors.IsNotConfirmed], [EditErrors.NoAccountWithSuchId]])(
+    it.each([
+      [EditErrors.IsNotConfirmed, ForbiddenException],
+      [EditErrors.NoAccountWithSuchId, NotFoundException],
+    ])(
       'Throws a 404 error if the service returns an error',
-      async (error: EditErrors) => {
+      async (error: EditErrors, exception: typeof ForbiddenException) => {
         // Arrange
         const mockResult = Result.err(error);
 
@@ -146,7 +149,7 @@ describe('ProfilesController', () => {
         // Act & Assert
         await expect(() =>
           controller.editProfile(1, editProfileBody),
-        ).rejects.toThrow(NotFoundException);
+        ).rejects.toThrow(exception);
       },
     );
   });

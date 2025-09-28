@@ -118,7 +118,7 @@ describe('ProfilesController (e2e)', () => {
       expect(editedProfile.lastName).toBe('Mitarai');
     });
 
-    it('Returns 404 if the profile is not confirmed', async () => {
+    it('Returns 403 if the profile is not confirmed', async () => {
       const profile = profiles.find((profile) => !profile.confirmed)!;
 
       const requestBody = new EditProfileDto();
@@ -129,7 +129,7 @@ describe('ProfilesController (e2e)', () => {
         .patch(`/profiles/${profile.id}`)
         .send(requestBody);
 
-      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      expect(response.status).toBe(HttpStatus.FORBIDDEN);
       const body = response.body as NotFoundException;
 
       expect(body.message).toBe(

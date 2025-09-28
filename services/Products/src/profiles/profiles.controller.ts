@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -20,6 +21,7 @@ import {
   editProfileErrorMessages,
   getProfileErrorMessages,
 } from './constants/erroMessages';
+import { EditErrors } from './types/EditErrors';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -70,6 +72,10 @@ export class ProfilesController {
     const result = await this.profilesService.edit(details, id);
 
     if (result.isErr) {
+      if (result.error === EditErrors.IsNotConfirmed) {
+        throw new ForbiddenException(editProfileErrorMessages[result.error]);
+      }
+
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
