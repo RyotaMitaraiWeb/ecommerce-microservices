@@ -167,6 +167,22 @@ describe('ProfilesController (e2e)', () => {
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
     });
+
+    it('REST endpoint returns 409 if the profile is already confirmed', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = 'Mitarai';
+
+      const profile = profiles.find(
+        (profile) => profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .post(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.CONFLICT);
+    });
   });
 
   describe('endpoint "/{id}" (PATCH)', () => {

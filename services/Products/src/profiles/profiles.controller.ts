@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   ForbiddenException,
   Get,
@@ -31,6 +32,7 @@ import {
 } from '@nestjs/microservices';
 import { ProfileInitPayload } from './types/profile-init';
 import { Channel } from 'amqplib';
+import { CreateErrors } from './types/CreateErrors';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -78,6 +80,10 @@ export class ProfilesController {
     const result = await this.profilesService.create(details, id, today);
 
     if (result.isErr) {
+      if (result.error === CreateErrors.IsConfirmed) {
+        throw new ConflictException(createProfileErrorMessages[result.error]);
+      }
+
       throw new NotFoundException(createProfileErrorMessages[result.error]);
     }
 

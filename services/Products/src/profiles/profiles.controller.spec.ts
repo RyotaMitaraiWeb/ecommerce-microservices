@@ -5,7 +5,11 @@ import { profileRepositoryStub } from './test-utils/stubs';
 import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { ProfileDto } from './dto/profile.dto';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   createProfileBody,
   editProfileBody,
@@ -160,22 +164,33 @@ describe('ProfilesController', () => {
       expect(result.id).toBe(1);
     });
 
-    it.each([[CreateErrors.NoAccountWithSuchId], [CreateErrors.IsConfirmed]])(
-      'Throws a 404 error if the service returns an error',
-      async (error: CreateErrors) => {
-        // Arrange
-        const mockResult = Result.err(error);
-        const mockDate = new Date('01/01/2020');
+    it('Throws a 404 error if the service returns NoAcccountWithSuch error', async () => {
+      // Arrange
+      const mockResult = Result.err(CreateErrors.NoAccountWithSuchId);
+      const mockDate = new Date('01/01/2020');
 
-        jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
-        jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+      jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+      jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
-        // Act & Assert
-        await expect(() =>
-          controller.createProfile(1, createProfileBody),
-        ).rejects.toThrow(NotFoundException);
-      },
-    );
+      // Act & Assert
+      await expect(() =>
+        controller.createProfile(1, createProfileBody),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('Throws a 409 error if the service returns Confirmed error', async () => {
+      // Arrange
+      const mockResult = Result.err(CreateErrors.IsConfirmed);
+      const mockDate = new Date('01/01/2020');
+
+      jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+      jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() =>
+        controller.createProfile(1, createProfileBody),
+      ).rejects.toThrow(ConflictException);
+    });
   });
 
   describe('editProfile', () => {
