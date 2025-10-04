@@ -47,6 +47,8 @@ services:
     depends_on:
       products_db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   auth_db:
     container_name: auth_database
     image: postgres
@@ -82,15 +84,23 @@ services:
 
   # Global services
   rabbitmq:
+    container_name: rabbitmq_server
     image: rabbitmq:3-management
+    restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   adminer:
     image: adminer
     restart: always
@@ -99,3 +109,6 @@ services:
     depends_on:
       auth_db:
         condition: service_healthy
+
+volumes:
+  rabbitmq_data:
