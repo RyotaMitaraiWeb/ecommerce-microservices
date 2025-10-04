@@ -47,6 +47,8 @@ services:
     depends_on:
       products_db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
   auth_db:
     container_name: auth_database
     image: postgres
@@ -93,6 +95,12 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   adminer:
     image: adminer
     restart: always
