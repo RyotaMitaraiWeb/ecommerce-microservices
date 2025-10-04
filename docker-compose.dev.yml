@@ -87,7 +87,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
@@ -99,3 +99,6 @@ services:
     depends_on:
       auth_db:
         condition: service_healthy
+
+volumes:
+  rabbitmq_data:
