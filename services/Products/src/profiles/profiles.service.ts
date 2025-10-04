@@ -12,6 +12,8 @@ import { EditErrors } from './types/EditErrors';
 import { DeleteErrors } from './types/DeleteErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
+import { InitializeProfileErrors } from './types/InitializeProfileErrors';
+import { isEmailIsAlreadyTakenError } from './constants/errorChecks';
 
 @Injectable()
 export class ProfilesService {
@@ -45,16 +47,25 @@ export class ProfilesService {
 
   async initialize(
     email: string,
-  ): Promise<Result<InitializeProfileResultDto, undefined>> {
-    const profile = new Profile();
-    profile.confirmed = false;
-    profile.email = email;
-    profile.lastName = '';
-    profile.firstName = '';
+  ): Promise<Result<InitializeProfileResultDto, InitializeProfileErrors>> {
+    try {
+      const profile = this.repository.create({
+        email,
+        confirmed: false,
+        firstName: '',
+        lastName: '',
+      });
 
-    const result = await this.repository.save(profile);
-    const dto = Mapper.profile.toInitializeResultDto(result);
-    return Result.ok(dto);
+      const saved = await this.repository.save(profile);
+      const dto = Mapper.profile.toInitializeResultDto(saved);
+      return Result.ok(dto);
+    } catch (err) {
+      if (isEmailIsAlreadyTakenError(err)) {
+        return Result.err(InitializeProfileErrors.EmailAlreadyExists);
+      }
+
+      return Result.err(InitializeProfileErrors.Unknown);
+    }
   }
 
   async create(

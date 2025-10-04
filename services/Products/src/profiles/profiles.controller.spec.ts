@@ -19,6 +19,7 @@ import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
 import { ProfileInitPayload } from './types/profile-init';
 import { RpcException } from '@nestjs/microservices';
+import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -94,9 +95,10 @@ describe('ProfilesController', () => {
   describe('handleProfileInit', () => {
     it('Returns a DTO when successful', async () => {
       // Arrange
-      const mockResult = Result.ok<InitializeProfileResultDto, undefined>(
-        Mapper.profile.toInitializeResultDto(profile),
-      );
+      const mockResult = Result.ok<
+        InitializeProfileResultDto,
+        InitializeProfileErrors
+      >(Mapper.profile.toInitializeResultDto(profile));
 
       const data: ProfileInitPayload = {
         email: profile.email,
@@ -114,25 +116,32 @@ describe('ProfilesController', () => {
       expect(result.email).toBe(profile.email);
     });
 
-    it('Throws an RPC error if initialization fails for whatever reason', async () => {
-      // Arrange
-      const data: ProfileInitPayload = {
-        email: profile.email,
-      };
+    it.each([
+      InitializeProfileErrors.EmailAlreadyExists,
+      InitializeProfileErrors.Unknown,
+    ])(
+      'Throws an RPC error if initialization fails for whatever reason',
+      async (error) => {
+        // Arrange
+        const data: ProfileInitPayload = {
+          email: profile.email,
+        };
 
-      const mockResult = Result.err<InitializeProfileResultDto, undefined>(
-        undefined,
-      );
+        const mockResult = Result.err<
+          InitializeProfileResultDto,
+          InitializeProfileErrors
+        >(error);
 
-      jest
-        .spyOn(profileService, 'initialize')
-        .mockResolvedValueOnce(mockResult);
+        jest
+          .spyOn(profileService, 'initialize')
+          .mockResolvedValueOnce(mockResult);
 
-      // Act & Assert
-      await expect(() => controller.handleProfileInit(data)).rejects.toThrow(
-        RpcException,
-      );
-    });
+        // Act & Assert
+        await expect(() => controller.handleProfileInit(data)).rejects.toThrow(
+          RpcException,
+        );
+      },
+    );
   });
 
   describe('createProfile', () => {

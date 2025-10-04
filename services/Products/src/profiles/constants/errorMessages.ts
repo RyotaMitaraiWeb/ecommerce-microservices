@@ -1,5 +1,6 @@
 import { CreateErrors } from '../types/CreateErrors';
 import { EditErrors } from '../types/EditErrors';
+import { InitializeProfileErrors } from '../types/InitializeProfileErrors';
 
 export const nameErrorMessages = {
   illegal:
@@ -23,5 +24,8 @@ export const editProfileErrorMessages = {
 };
 
 export const profileInitializationErrors = {
-  unknown: 'Something went wrong with profile initialization',
+  [InitializeProfileErrors.Unknown]:
+    'Something went wrong with profile initialization',
+  [InitializeProfileErrors.EmailAlreadyExists]:
+    'Profile with this email has already been initialized',
 };

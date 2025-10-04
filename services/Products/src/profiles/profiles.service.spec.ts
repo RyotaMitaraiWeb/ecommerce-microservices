@@ -1,3 +1,5 @@
+import { DatabaseError } from 'pg';
+import { QueryFailedError } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfilesService } from './profiles.service';
 import { Repository } from 'typeorm';
@@ -15,6 +17,8 @@ import { CreateErrors } from './types/CreateErrors';
 import { EditErrors } from './types/EditErrors';
 import { DeleteErrors } from './types/DeleteErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
+import { InitializeProfileErrors } from './types/InitializeProfileErrors';
+import { pgUniqueConstraintErrorCode } from './constants/errorCodes';
 
 // Prevent state mutation from polluting our tests;
 const unconfirmedProfileCopy = { ...unconfirmedProfile };
@@ -136,6 +140,56 @@ describe('ProfilesService', () => {
 
       expect(profile.email).toBe(email);
       expect(profile.id).toBe(initializedProfileMock.id);
+    });
+
+    it('Returns EmailAlreadyExists error if an email already exists', async () => {
+      // Arrange
+      const email = 'hello@gmail.com';
+      const dbError = new DatabaseError('unique constraint error', 1, 'error');
+      dbError.code = pgUniqueConstraintErrorCode;
+      const error = new QueryFailedError('QUERY', [], dbError);
+
+      jest.spyOn(repository, 'save').mockRejectedValueOnce(error);
+
+      // Act
+      const result = await service.initialize(email);
+
+      // Assert
+      expect(result.isErr).toBe(true);
+      expect(result.error).toBe(InitializeProfileErrors.EmailAlreadyExists);
+    });
+
+    it('Returns Unknown error if the error is a query one, but not a unique constraint one', async () => {
+      // Arrange
+      const email = 'hello@gmail.com';
+      const dbError = new DatabaseError('unique constraint error', 1, 'error');
+      dbError.code = '23502';
+      const error = new QueryFailedError('QUERY', [], dbError);
+
+      jest.spyOn(repository, 'save').mockRejectedValueOnce(error);
+
+      // Act
+      const result = await service.initialize(email);
+
+      // Assert
+      expect(result.isErr).toBe(true);
+      expect(result.error).toBe(InitializeProfileErrors.Unknown);
+    });
+
+    it('Returns Unknown error if the error is not a query one', async () => {
+      // Arrange
+      const email = 'hello@gmail.com';
+
+      const error = new Error();
+
+      jest.spyOn(repository, 'save').mockRejectedValueOnce(error);
+
+      // Act
+      const result = await service.initialize(email);
+
+      // Assert
+      expect(result.isErr).toBe(true);
+      expect(result.error).toBe(InitializeProfileErrors.Unknown);
     });
   });
 

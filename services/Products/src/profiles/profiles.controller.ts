@@ -63,7 +63,7 @@ export class ProfilesController {
     const result = await this.profilesService.initialize(email);
 
     if (result.isErr) {
-      throw new RpcException(profileInitializationErrors.unknown);
+      throw new RpcException(profileInitializationErrors[result.error]);
     }
 
     return result.value;
