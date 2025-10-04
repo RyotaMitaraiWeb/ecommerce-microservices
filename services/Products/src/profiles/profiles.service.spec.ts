@@ -115,6 +115,30 @@ describe('ProfilesService', () => {
     });
   });
 
+  describe('initialize', () => {
+    it('Returns correct DTO when initialization is successful', async () => {
+      // Arrange
+      const email = 'test@gmail.com';
+      const initializedProfileMock = new Profile();
+      initializedProfileMock.id = 1;
+      initializedProfileMock.email = email;
+
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValueOnce(initializedProfileMock);
+
+      // Act
+      const result = await service.initialize(email);
+
+      // Assert
+      expect(result.isOk).toBe(true);
+      const profile = result.value;
+
+      expect(profile.email).toBe(email);
+      expect(profile.id).toBe(initializedProfileMock.id);
+    });
+  });
+
   describe('create', () => {
     it('Returns "profile does not exist" error if no profile with the given ID can be found', async () => {
       // Arrange

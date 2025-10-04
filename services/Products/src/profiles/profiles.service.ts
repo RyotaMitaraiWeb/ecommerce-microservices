@@ -11,6 +11,7 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import { EditErrors } from './types/EditErrors';
 import { DeleteErrors } from './types/DeleteErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
+import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
 
 @Injectable()
 export class ProfilesService {
@@ -40,6 +41,20 @@ export class ProfilesService {
     });
 
     return Result.ok(profiles.map((profile) => Mapper.profile.toDto(profile)));
+  }
+
+  async initialize(
+    email: string,
+  ): Promise<Result<InitializeProfileResultDto, undefined>> {
+    const profile = new Profile();
+    profile.confirmed = false;
+    profile.email = email;
+    profile.lastName = '';
+    profile.firstName = '';
+
+    const result = await this.repository.save(profile);
+    const dto = Mapper.profile.toInitializeResultDto(result);
+    return Result.ok(dto);
   }
 
   async create(
