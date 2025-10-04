@@ -5,7 +5,11 @@ import { profileRepositoryStub } from './test-utils/stubs';
 import { Result } from 'src/common/result/result';
 import { GetByIdErrors } from './types/GetByIdErrors';
 import { ProfileDto } from './dto/profile.dto';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   createProfileBody,
   editProfileBody,
@@ -16,6 +20,10 @@ import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
+import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
+import { ProfileInitPayload } from './types/profile-init';
+import { RpcException } from '@nestjs/microservices';
+import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -88,6 +96,58 @@ describe('ProfilesController', () => {
     );
   });
 
+  describe('handleProfileInit', () => {
+    it('Returns a DTO when successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<
+        InitializeProfileResultDto,
+        InitializeProfileErrors
+      >(Mapper.profile.toInitializeResultDto(profile));
+
+      const data: ProfileInitPayload = {
+        email: profile.email,
+      };
+
+      jest
+        .spyOn(profileService, 'initialize')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.handleProfileInit(data);
+
+      // Assert
+      expect(result.id).toBe(profile.id);
+      expect(result.email).toBe(profile.email);
+    });
+
+    it.each([
+      InitializeProfileErrors.EmailAlreadyExists,
+      InitializeProfileErrors.Unknown,
+    ])(
+      'Throws an RPC error if initialization fails for whatever reason',
+      async (error) => {
+        // Arrange
+        const data: ProfileInitPayload = {
+          email: profile.email,
+        };
+
+        const mockResult = Result.err<
+          InitializeProfileResultDto,
+          InitializeProfileErrors
+        >(error);
+
+        jest
+          .spyOn(profileService, 'initialize')
+          .mockResolvedValueOnce(mockResult);
+
+        // Act & Assert
+        await expect(() => controller.handleProfileInit(data)).rejects.toThrow(
+          RpcException,
+        );
+      },
+    );
+  });
+
   describe('createProfile', () => {
     it('Returns the provided ID if successful', async () => {
       // Arrange
@@ -104,22 +164,33 @@ describe('ProfilesController', () => {
       expect(result.id).toBe(1);
     });
 
-    it.each([[CreateErrors.NoAccountWithSuchId], [CreateErrors.IsConfirmed]])(
-      'Throws a 404 error if the service returns an error',
-      async (error: CreateErrors) => {
-        // Arrange
-        const mockResult = Result.err(error);
-        const mockDate = new Date('01/01/2020');
+    it('Throws a 404 error if the service returns NoAcccountWithSuch error', async () => {
+      // Arrange
+      const mockResult = Result.err(CreateErrors.NoAccountWithSuchId);
+      const mockDate = new Date('01/01/2020');
 
-        jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
-        jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+      jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+      jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
-        // Act & Assert
-        await expect(() =>
-          controller.createProfile(1, createProfileBody),
-        ).rejects.toThrow(NotFoundException);
-      },
-    );
+      // Act & Assert
+      await expect(() =>
+        controller.createProfile(1, createProfileBody),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('Throws a 409 error if the service returns Confirmed error', async () => {
+      // Arrange
+      const mockResult = Result.err(CreateErrors.IsConfirmed);
+      const mockDate = new Date('01/01/2020');
+
+      jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
+      jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() =>
+        controller.createProfile(1, createProfileBody),
+      ).rejects.toThrow(ConflictException);
+    });
   });
 
   describe('editProfile', () => {

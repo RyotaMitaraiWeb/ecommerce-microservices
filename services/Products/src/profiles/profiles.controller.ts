@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   ForbiddenException,
   Get,
@@ -20,8 +21,18 @@ import {
   createProfileErrorMessages,
   editProfileErrorMessages,
   getProfileErrorMessages,
-} from './constants/erroMessages';
+  profileInitializationErrors,
+} from './constants/errorMessages';
 import { EditErrors } from './types/EditErrors';
+import {
+  MessagePattern,
+  Payload,
+  RmqContext,
+  RpcException,
+} from '@nestjs/microservices';
+import { ProfileInitPayload } from './types/profile-init';
+import { Channel } from 'amqplib';
+import { CreateErrors } from './types/CreateErrors';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -48,6 +59,18 @@ export class ProfilesController {
     return result.value;
   }
 
+  @MessagePattern('init_profile')
+  public async handleProfileInit(@Payload() data: ProfileInitPayload) {
+    const email = data.email;
+    const result = await this.profilesService.initialize(email);
+
+    if (result.isErr) {
+      throw new RpcException(profileInitializationErrors[result.error]);
+    }
+
+    return result.value;
+  }
+
   @Post(':id')
   public async createProfile(
     @Param('id', ParseIntPipe) id: number,
@@ -57,6 +80,10 @@ export class ProfilesController {
     const result = await this.profilesService.create(details, id, today);
 
     if (result.isErr) {
+      if (result.error === CreateErrors.IsConfirmed) {
+        throw new ConflictException(createProfileErrorMessages[result.error]);
+      }
+
       throw new NotFoundException(createProfileErrorMessages[result.error]);
     }
 
@@ -79,4 +106,8 @@ export class ProfilesController {
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
+}
+
+export function getChannel(context: RmqContext): Channel {
+  return context.getChannelRef() as Channel;
 }

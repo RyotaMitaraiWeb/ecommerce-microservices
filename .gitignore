@@ -1,3 +1,4 @@
 # Docker volumes
 postgresql
 products-database
+rabbitmq_data

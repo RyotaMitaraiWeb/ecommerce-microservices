@@ -24,7 +24,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
     ports:
       - 5000:80
-  
+
   products:
     container_name: products_service
     volumes:
@@ -42,6 +42,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=A!strongpassword1234
       - POSTGRES_DB=products
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - RABBITMQ_PROFILE_INIT_QUEUE=profile_init
     depends_on:
       products_db:
         condition: service_healthy
@@ -77,6 +79,18 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./products-database:/var/lib/postgresql/data
+
+  # Global services
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
   adminer:
     image: adminer
     restart: always

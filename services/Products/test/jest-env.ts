@@ -4,17 +4,27 @@ import {
   StartedPostgreSqlContainer,
   PostgreSqlContainer,
 } from '@testcontainers/postgresql';
+import {
+  StartedRabbitMQContainer,
+  RabbitMQContainer,
+} from '@testcontainers/rabbitmq';
 import { DataSource } from 'typeorm';
 import { Profile } from '../src/profiles/entities/profile.entity';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { App } from 'supertest/types';
 import { AppModule } from 'src/app.module';
+import {
+  ClientProxy,
+  ClientProxyFactory,
+  Transport,
+} from '@nestjs/microservices';
 
 declare global {
   var __POSTGRESCONTAINER__: StartedPostgreSqlContainer;
   var __DATASOURCE__: DataSource;
   var __NESTAPP__: INestApplication<App>;
+  var __RMQCLIENT__: ClientProxy;
 }
 
 class CustomEnvironment extends NodeEnvironment {
@@ -25,21 +35,30 @@ class CustomEnvironment extends NodeEnvironment {
   private readonly password = 'kklwqlkQAas!';
   private readonly username = 'testuser';
   private readonly db = 'testdb';
+  private readonly profileInitQueue = 'profile_init_queue';
 
   private container: StartedPostgreSqlContainer;
   private dataSource: DataSource;
   private app: INestApplication<App>;
+  private rmq: StartedRabbitMQContainer;
+  private rmqClient: ClientProxy;
 
   async setup() {
-    await this.initializeContainer();
+    await Promise.all([this.initializeContainer(), this.initializeRabbitMQ()]);
     await this.initializeDb();
+
+    this.setEnvironmentVariables();
+
+    await this.startRmqClient();
     await this.startApp();
     await super.setup();
   }
 
   async teardown() {
     await this.container.stop();
+    await this.rmqClient.close();
     await this.app.close();
+    await this.rmq.stop();
     await super.teardown();
   }
 
@@ -93,6 +112,56 @@ class CustomEnvironment extends NodeEnvironment {
     this.app = app;
     await app.init();
     console.log('App initialized successfully');
+
+    // 🚀 Start the RMQ microservice listener
+    const amqpUrl = this.rmq.getAmqpUrl();
+
+    app.connectMicroservice({
+      transport: Transport.RMQ,
+      options: {
+        urls: [amqpUrl],
+        queue: this.profileInitQueue,
+        queueOptions: { durable: false },
+      },
+    });
+
+    await app.startAllMicroservices();
+  }
+
+  private async initializeRabbitMQ() {
+    console.log('Starting RabbitMQ container...');
+    this.rmq = await new RabbitMQContainer('rabbitmq:3-management')
+      .withExposedPorts(5672, 15672)
+      .start();
+
+    this.global.__RABBITCONTAINER__ = this.rmq;
+    console.log(`RabbitMQ started: ${this.rmq.getAmqpUrl()}`);
+  }
+
+  private async startRmqClient() {
+    console.log('Creating RMQ client proxy...');
+    const amqpUrl = this.rmq.getAmqpUrl();
+
+    this.rmqClient = ClientProxyFactory.create({
+      transport: Transport.RMQ,
+      options: {
+        urls: [amqpUrl],
+        queue: this.profileInitQueue,
+        queueOptions: { durable: false },
+      },
+    });
+
+    await this.rmqClient.connect();
+
+    this.global.__RMQCLIENT__ = this.rmqClient;
+    console.log('RMQ client connected');
+  }
+
+  private setEnvironmentVariables() {
+    process.env.RABBITMQ_URL = this.rmq.getAmqpUrl();
+    process.env.RABBITMQ_QUEUE = this.profileInitQueue;
+
+    console.log('Environment variables set for NestJS app');
   }
 }
 
