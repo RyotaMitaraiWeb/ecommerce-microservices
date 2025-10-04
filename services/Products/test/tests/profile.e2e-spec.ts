@@ -14,12 +14,18 @@ import {
 } from 'src/profiles/constants/erroMessages';
 import { EditProfileDto } from 'src/profiles/dto/edit-profile.dto';
 import { EditErrors } from 'src/profiles/types/EditErrors';
+import { ClientProxy } from '@nestjs/microservices';
+import { InitializeProfileResultDto } from 'src/profiles/dto/initialize-profile-result-dto';
+import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
+import { from, map, switchMap, tap } from 'rxjs';
 
 describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
+  let rmqClient: ClientProxy;
 
   beforeAll(() => {
     app = global.__NESTAPP__;
+    rmqClient = global.__RMQCLIENT__;
   });
 
   beforeEach(async () => {
@@ -90,6 +96,50 @@ describe('ProfilesController (e2e)', () => {
       const body = response.body as ProfileDto[];
 
       expect(body.length).toBe(validProfiles.length);
+    });
+  });
+
+  describe('Profile creation (pattern "init_profile" (RabbitMQ) and endpoint "/" (POST))', () => {
+    it('Initializes and creates a profile successfully', (done) => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = 'Mitarai';
+
+      rmqClient
+        .send('init_profile', { email: 'myvalidemail@gmail.com' })
+        .pipe(
+          // Assert that initialization has been processed correctly
+          tap((data: InitializeProfileResultDto) => {
+            expect(data.email).toBe('myvalidemail@gmail.com');
+          }),
+          // Sending a POST request to finalize the profile
+          switchMap((data) =>
+            from(
+              request(app.getHttpServer())
+                .post(`/profiles/${data.id}`)
+                .send(payload),
+            ),
+          ),
+          // Ensure that the profile has been created
+          tap((response) => {
+            expect(response.status).toBe(HttpStatus.CREATED);
+          }),
+          // Check if the profile has been edited successfully
+          map((response) => {
+            const body = response.body as { id: number };
+            return body.id;
+          }),
+          switchMap((id) =>
+            from(request(app.getHttpServer()).get(`/profiles/${id}`)),
+          ),
+        )
+        .subscribe((response) => {
+          expect(response.status).toBe(HttpStatus.OK);
+          const body = response.body as ProfileDto;
+          expect(body.firstName).toBe('Ryota');
+          expect(body.lastName).toBe('Mitarai');
+          done();
+        });
     });
   });
 
