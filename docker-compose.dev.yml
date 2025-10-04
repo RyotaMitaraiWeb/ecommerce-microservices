@@ -82,6 +82,7 @@ services:
 
   # Global services
   rabbitmq:
+    name: rabbitmq_server
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
