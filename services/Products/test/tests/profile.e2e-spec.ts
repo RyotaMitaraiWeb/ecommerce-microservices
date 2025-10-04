@@ -141,6 +141,32 @@ describe('ProfilesController (e2e)', () => {
           done();
         });
     });
+
+    it('REST endpoint returns 404 if the profile does not exist', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = 'Mitarai';
+
+      const response = await request(app.getHttpServer())
+        .post('/profiles/150000')
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    });
+
+    it('REST endpoint returns 404 if the profile is deleted', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = 'Mitarai';
+
+      const profile = profiles.find((profile) => profile.deletedAt)!;
+
+      const response = await request(app.getHttpServer())
+        .post(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+    });
   });
 
   describe('endpoint "/{id}" (PATCH)', () => {
