@@ -11,7 +11,7 @@ import { ProfileDto } from 'src/profiles/dto/profile.dto';
 import {
   editProfileErrorMessages,
   getProfileErrorMessages,
-} from 'src/profiles/constants/erroMessages';
+} from 'src/profiles/constants/errorMessages';
 import { EditProfileDto } from 'src/profiles/dto/edit-profile.dto';
 import { EditErrors } from 'src/profiles/types/EditErrors';
 import { ClientProxy } from '@nestjs/microservices';

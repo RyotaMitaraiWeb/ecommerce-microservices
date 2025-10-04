@@ -4,7 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { nameErrorMessages } from 'src/profiles/constants/erroMessages';
+import { nameErrorMessages } from 'src/profiles/constants/errorMessages';
 
 const NAME_REGEX = /^[\p{L}](?:[\p{L}\p{M}']*(?:[- ][\p{L}\p{M}']+)*)?$/u;
 

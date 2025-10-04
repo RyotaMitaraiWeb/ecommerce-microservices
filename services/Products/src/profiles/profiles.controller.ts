@@ -21,7 +21,7 @@ import {
   editProfileErrorMessages,
   getProfileErrorMessages,
   profileInitializationErrors,
-} from './constants/erroMessages';
+} from './constants/errorMessages';
 import { EditErrors } from './types/EditErrors';
 import {
   MessagePattern,
