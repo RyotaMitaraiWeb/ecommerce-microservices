@@ -16,6 +16,9 @@ import { ClockService } from 'src/clock/clock.service';
 import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
+import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
+import { ProfileInitPayload } from './types/profile-init';
+import { RpcException } from '@nestjs/microservices';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -86,6 +89,50 @@ describe('ProfilesController', () => {
         expect(result).toEqual(profiles);
       },
     );
+  });
+
+  describe('handleProfileInit', () => {
+    it('Returns a DTO when successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<InitializeProfileResultDto, undefined>(
+        Mapper.profile.toInitializeResultDto(profile),
+      );
+
+      const data: ProfileInitPayload = {
+        email: profile.email,
+      };
+
+      jest
+        .spyOn(profileService, 'initialize')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.handleProfileInit(data);
+
+      // Assert
+      expect(result.id).toBe(profile.id);
+      expect(result.email).toBe(profile.email);
+    });
+
+    it('Throws an RPC error if initialization fails for whatever reason', async () => {
+      // Arrange
+      const data: ProfileInitPayload = {
+        email: profile.email,
+      };
+
+      const mockResult = Result.err<InitializeProfileResultDto, undefined>(
+        undefined,
+      );
+
+      jest
+        .spyOn(profileService, 'initialize')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.handleProfileInit(data)).rejects.toThrow(
+        RpcException,
+      );
+    });
   });
 
   describe('createProfile', () => {

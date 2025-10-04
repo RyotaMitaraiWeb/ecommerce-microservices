@@ -20,8 +20,17 @@ import {
   createProfileErrorMessages,
   editProfileErrorMessages,
   getProfileErrorMessages,
+  profileInitializationErrors,
 } from './constants/erroMessages';
 import { EditErrors } from './types/EditErrors';
+import {
+  MessagePattern,
+  Payload,
+  RmqContext,
+  RpcException,
+} from '@nestjs/microservices';
+import { ProfileInitPayload } from './types/profile-init';
+import { Channel } from 'amqplib';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -45,6 +54,18 @@ export class ProfilesController {
   @Get()
   public async getAllProfiles(): Promise<ProfileDto[]> {
     const result = await this.profilesService.get();
+    return result.value;
+  }
+
+  @MessagePattern('init_profile')
+  public async handleProfileInit(@Payload() data: ProfileInitPayload) {
+    const email = data.email;
+    const result = await this.profilesService.initialize(email);
+
+    if (result.isErr) {
+      throw new RpcException(profileInitializationErrors.unknown);
+    }
+
     return result.value;
   }
 
@@ -79,4 +100,8 @@ export class ProfilesController {
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
+}
+
+export function getChannel(context: RmqContext): Channel {
+  return context.getChannelRef() as Channel;
 }

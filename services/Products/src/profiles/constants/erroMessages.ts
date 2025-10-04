@@ -21,3 +21,7 @@ export const editProfileErrorMessages = {
     'Please confirm your account first before making edits to your profile!',
   [EditErrors.NoAccountWithSuchId]: 'No profile found.',
 };
+
+export const profileInitializationErrors = {
+  unknown: 'Something went wrong with profile initialization',
+};
