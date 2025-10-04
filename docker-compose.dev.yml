@@ -24,7 +24,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
     ports:
       - 5000:80
-  
+
   products:
     container_name: products_service
     volumes:
@@ -77,6 +77,18 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./products-database:/var/lib/postgresql/data
+
+  # Global services
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
   adminer:
     image: adminer
     restart: always
