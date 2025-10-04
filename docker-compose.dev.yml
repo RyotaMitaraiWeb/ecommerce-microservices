@@ -42,6 +42,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=A!strongpassword1234
       - POSTGRES_DB=products
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - RABBITMQ_PROFILE_INIT_QUEUE=profile_init
     depends_on:
       products_db:
         condition: service_healthy
