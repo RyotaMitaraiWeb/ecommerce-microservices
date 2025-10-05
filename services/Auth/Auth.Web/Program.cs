@@ -1,6 +1,4 @@
 using Auth.Web.Extensions;
-using Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace Auth.Web
 {

@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Jwt.Constants;
+using Channel.Services.Contracts;
+using Channel.Services;
 
 namespace Auth.Web.Extensions
 {
@@ -65,7 +67,8 @@ namespace Auth.Web.Extensions
                 .AddLogging()
                 .AddCors()
                 .AddScoped<IJwtService, JwtService>()
-                .AddScoped<IUserService, UserService>();
+                .AddScoped<IUserService, UserService>()
+                .AddSingleton<IChannelService, ChannelService>();
         }
 
         public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)
