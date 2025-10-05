@@ -5,13 +5,18 @@ using Jwt.Services.Contracts;
 using Jwt.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ProductsApi.Dto;
+using ProductsApi.Services.Contracts;
 
 namespace Auth.Web.Controllers
 {
     [ApiController]
     [Route("auth")]
 
-    public class AuthController(IUserService userService, IJwtService jwtService) : ControllerBase
+    public class AuthController(
+        IUserService userService,
+        IJwtService jwtService,
+        IProductApiService productApiService) : ControllerBase
     {
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto login)
@@ -40,6 +45,14 @@ namespace Auth.Web.Controllers
             }
 
             AuthPayloadDto payload = await CreateAuthPayload(result);
+
+            InitializeProfilePayloadDto profileData = new()
+            {
+                Email = register.Email,
+            };
+
+
+            _ = productApiService.InitializeProfile(profileData);
 
             // returning an empty string for location for now, as the API isn't exposing
             // a details endpoint for users

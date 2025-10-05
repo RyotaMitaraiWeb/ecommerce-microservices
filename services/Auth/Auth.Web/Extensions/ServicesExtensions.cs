@@ -14,6 +14,8 @@ using System.Text;
 using Jwt.Constants;
 using Channel.Services.Contracts;
 using Channel.Services;
+using ProductsApi.Services.Contracts;
+using ProductsApi.Services;
 
 namespace Auth.Web.Extensions
 {
@@ -68,7 +70,8 @@ namespace Auth.Web.Extensions
                 .AddCors()
                 .AddScoped<IJwtService, JwtService>()
                 .AddScoped<IUserService, UserService>()
-                .AddSingleton<IChannelService, ChannelService>();
+                .AddSingleton<IChannelService, ChannelService>()
+                .AddScoped<IProductApiService, ProductApiService>();
         }
 
         public static IServiceCollection AddDatabase(this IServiceCollection services, WebApplicationBuilder builder)

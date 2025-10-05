@@ -29,6 +29,7 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\Jwt\Jwt.csproj" />
+    <ProjectReference Include="..\ProductsApi\ProductsApi.csproj" />
   </ItemGroup>
 
 </Project>
