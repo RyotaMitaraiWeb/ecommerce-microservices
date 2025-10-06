@@ -11,22 +11,29 @@ namespace ProductsApi.Services
     {
         public async Task<InitializeProfileResultDto> InitializeProfile(InitializeProfilePayloadDto payload)
         {
+            var rpcPayload = new
+            {
+                pattern = "init_profile",
+                data = new { email = payload.Email }
+            };
             var connection = await channelService.GetConnectionAsync();
             await using var channel = await connection.CreateChannelAsync();
 
+            Console.WriteLine("TEST");
+
             await channel.QueueDeclareAsync(
-                    queue: "init_profile",
+                    queue: "profile_init",
                     durable: true,
                     exclusive: false,
                     autoDelete: false
                 );
 
-            var json = JsonSerializer.Serialize(payload);
+            var json = JsonSerializer.Serialize(rpcPayload);
             var body = Encoding.UTF8.GetBytes(json);
 
             await channel.BasicPublishAsync(
                     exchange: "",
-                    routingKey: "init_profile",
+                    routingKey: "profile_init",
                     mandatory: false,
                     body: new ReadOnlyMemory<byte>(body)
                 );
