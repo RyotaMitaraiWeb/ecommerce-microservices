@@ -22,24 +22,6 @@ namespace Channel.Services
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
-        private async Task<IConnection> GetConnectionAsync()
-        {
-            if (_connectionTask == null)
-            {
-                var factory = new ConnectionFactory
-                {
-                    HostName = hostName,
-                    Port = 5672,
-                    UserName = username,
-                    Password = password,
-                };
-
-                _connectionTask = factory.CreateConnectionAsync();
-            }
-
-            return await _connectionTask;
-        }
-
         public async ValueTask DisposeAsync()
         {
             if (_connectionTask != null)
@@ -158,6 +140,24 @@ namespace Channel.Services
             await using var _ = cts.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
             return await tcs.Task;
+        }
+
+        private async Task<IConnection> GetConnectionAsync()
+        {
+            if (_connectionTask == null)
+            {
+                var factory = new ConnectionFactory
+                {
+                    HostName = hostName,
+                    Port = 5672,
+                    UserName = username,
+                    Password = password,
+                };
+
+                _connectionTask = factory.CreateConnectionAsync();
+            }
+
+            return await _connectionTask;
         }
     }
 
