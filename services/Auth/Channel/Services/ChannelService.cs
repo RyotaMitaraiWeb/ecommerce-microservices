@@ -2,6 +2,7 @@
 using Channel.Services.Contracts;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -67,6 +68,7 @@ namespace Channel.Services
 
             var rpcPayload = new RpcPayload<TPayload>()
             {
+                Id = Guid.NewGuid().ToString(),
                 Data = payload,
                 Pattern = pattern,
             };
@@ -80,6 +82,87 @@ namespace Channel.Services
                     mandatory: false,
                     body: new ReadOnlyMemory<byte>(body)
                 );
+        }
+
+        public async Task<TResponse> PublishNestJsRpcMessage<TPayload, TResponse>(
+            TPayload payload,
+            string pattern,
+            string queue,
+            TimeSpan? timeout = null)
+        {
+            timeout ??= TimeSpan.FromSeconds(10);
+
+            var connection = await GetConnectionAsync();
+            await using var channel = await connection.CreateChannelAsync();
+
+            // Create an exclusive reply queue for this RPC call
+            var replyQueue = await channel.QueueDeclareAsync(
+                queue: string.Empty,
+                exclusive: true,
+                autoDelete: true
+            );
+
+            var correlationId = Guid.NewGuid().ToString();
+
+            // Prepare the payload in the same structure NestJS expects
+            var rpcPayload = new RpcPayload<TPayload>
+            {
+                Id = Guid.NewGuid().ToString(),
+                Data = payload,
+                Pattern = pattern
+            };
+
+            var json = JsonSerializer.Serialize(rpcPayload, jsonSerializerOptions);
+            var body = Encoding.UTF8.GetBytes(json);
+
+            var props = new BasicProperties
+            {
+                ReplyTo = replyQueue.QueueName,
+                CorrelationId = correlationId
+            };
+
+            var tcs = new TaskCompletionSource<TResponse>();
+
+            // Set up a consumer for the reply queue
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.ReceivedAsync += async (sender, ea) =>
+            {
+                if (ea.BasicProperties.CorrelationId == correlationId)
+                {
+                    var responseJson = Encoding.UTF8.GetString(ea.Body.ToArray());
+
+                    try
+                    {
+                        var envelope = JsonSerializer.Deserialize<NestRpcResponseEnvelope<TResponse>>(responseJson, jsonSerializerOptions);
+                        if (envelope is not null && envelope.Response is not null)
+                        {
+                            tcs.TrySetResult(envelope.Response);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.TrySetException(ex);
+                    }
+                }
+                await Task.Yield();
+            };
+
+            await channel.BasicConsumeAsync(replyQueue.QueueName, true, consumer);
+
+            // Publish the RPC request
+            await channel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: queue,
+                mandatory: false,
+                basicProperties: props,
+                body: new ReadOnlyMemory<byte>(body)
+            );
+
+            using var cts = new CancellationTokenSource(timeout.Value);
+            await using var _ = cts.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
+
+            Console.WriteLine("Done here");
+            return await tcs.Task;
         }
     }
 
