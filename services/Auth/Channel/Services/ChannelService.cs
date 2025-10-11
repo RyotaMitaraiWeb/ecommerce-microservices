@@ -38,8 +38,8 @@ namespace Channel.Services
 
         public async Task PublishMessage<TPayload>(TPayload payload, string pattern, string queue)
         {
-            var connection = await this.GetConnectionAsync();
-            await using var channel = await connection.CreateChannelAsync();
+            IConnection connection = await this.GetConnectionAsync();
+            await using IChannel channel = await connection.CreateChannelAsync();
 
             await channel.QueueDeclareAsync(
                     queue: queue,
@@ -48,21 +48,13 @@ namespace Channel.Services
                     autoDelete: false
                 );
 
-            var rpcPayload = new RpcPayload<TPayload>()
-            {
-                Id = Guid.NewGuid().ToString(),
-                Data = payload,
-                Pattern = pattern,
-            };
-
-            var json = JsonSerializer.Serialize(rpcPayload, jsonSerializerOptions);
-            var body = Encoding.UTF8.GetBytes(json);
+            ReadOnlyMemory<byte> body = ConstructRpcRequestBody(payload, pattern);
 
             await channel.BasicPublishAsync(
                     exchange: "",
                     routingKey: queue,
                     mandatory: false,
-                    body: new ReadOnlyMemory<byte>(body)
+                    body: body
                 );
         }
 
@@ -74,28 +66,20 @@ namespace Channel.Services
         {
             timeout ??= TimeSpan.FromSeconds(10);
 
-            var connection = await GetConnectionAsync();
-            await using var channel = await connection.CreateChannelAsync();
+            IConnection connection = await GetConnectionAsync();
+            await using IChannel channel = await connection.CreateChannelAsync();
 
-            var replyQueue = await channel.QueueDeclareAsync(
+            QueueDeclareOk replyQueue = await channel.QueueDeclareAsync(
                 queue: string.Empty,
                 exclusive: true,
                 autoDelete: true
             );
 
-            var correlationId = Guid.NewGuid().ToString();
+            string correlationId = Guid.NewGuid().ToString();
 
-            var rpcPayload = new RpcPayload<TPayload>
-            {
-                Id = Guid.NewGuid().ToString(),
-                Data = payload,
-                Pattern = pattern
-            };
+            ReadOnlyMemory<byte> body = ConstructRpcRequestBody(payload, pattern);
 
-            var json = JsonSerializer.Serialize(rpcPayload, jsonSerializerOptions);
-            var body = Encoding.UTF8.GetBytes(json);
-
-            var props = new BasicProperties
+            BasicProperties props = new()
             {
                 ReplyTo = replyQueue.QueueName,
                 CorrelationId = correlationId
@@ -104,18 +88,18 @@ namespace Channel.Services
             var tcs = new TaskCompletionSource<TResponse>();
 
             var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.ReceivedAsync += async (sender, ea) =>
+            consumer.ReceivedAsync += async (sender, eventArgs) =>
             {
-                if (ea.BasicProperties.CorrelationId == correlationId)
+                if (eventArgs.BasicProperties.CorrelationId == correlationId)
                 {
-                    var responseJson = Encoding.UTF8.GetString(ea.Body.ToArray());
+                    string responseJson = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
 
                     try
                     {
-                        var envelope = JsonSerializer.Deserialize<TResponse>(responseJson, jsonSerializerOptions);
-                        if (envelope is not null)
+                        TResponse? response = JsonSerializer.Deserialize<TResponse>(responseJson, jsonSerializerOptions);
+                        if (response is not null)
                         {
-                            tcs.TrySetResult(envelope);
+                            tcs.TrySetResult(response);
                         }
                     }
                     catch (Exception ex)
@@ -133,7 +117,7 @@ namespace Channel.Services
                 routingKey: queue,
                 mandatory: false,
                 basicProperties: props,
-                body: new ReadOnlyMemory<byte>(body)
+                body: body
             );
 
             using var cts = new CancellationTokenSource(timeout.Value);
@@ -146,7 +130,7 @@ namespace Channel.Services
         {
             if (_connectionTask == null)
             {
-                var factory = new ConnectionFactory
+                ConnectionFactory factory = new()
                 {
                     HostName = hostName,
                     Port = 5672,
@@ -158,6 +142,21 @@ namespace Channel.Services
             }
 
             return await _connectionTask;
+        }
+
+        private ReadOnlyMemory<byte> ConstructRpcRequestBody<TPayload>(TPayload payload, string pattern)
+        {
+            RpcPayload<TPayload> rpcPayload = new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Data = payload,
+                Pattern = pattern
+            };
+
+            string json = JsonSerializer.Serialize(rpcPayload, jsonSerializerOptions);
+            byte[] body = Encoding.UTF8.GetBytes(json);
+
+            return new ReadOnlyMemory<byte>(body);
         }
     }
 
