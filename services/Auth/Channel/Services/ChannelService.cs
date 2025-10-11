@@ -84,7 +84,7 @@ namespace Channel.Services
                 );
         }
 
-        public async Task<TResponse> PublishNestJsRpcMessage<TPayload, TResponse>(
+        public async Task<TResponse> PublishRpcMessage<TPayload, TResponse>(
             TPayload payload,
             string pattern,
             string queue,
@@ -95,7 +95,6 @@ namespace Channel.Services
             var connection = await GetConnectionAsync();
             await using var channel = await connection.CreateChannelAsync();
 
-            // Create an exclusive reply queue for this RPC call
             var replyQueue = await channel.QueueDeclareAsync(
                 queue: string.Empty,
                 exclusive: true,
@@ -104,7 +103,6 @@ namespace Channel.Services
 
             var correlationId = Guid.NewGuid().ToString();
 
-            // Prepare the payload in the same structure NestJS expects
             var rpcPayload = new RpcPayload<TPayload>
             {
                 Id = Guid.NewGuid().ToString(),
@@ -123,7 +121,6 @@ namespace Channel.Services
 
             var tcs = new TaskCompletionSource<TResponse>();
 
-            // Set up a consumer for the reply queue
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (sender, ea) =>
             {
@@ -133,10 +130,10 @@ namespace Channel.Services
 
                     try
                     {
-                        var envelope = JsonSerializer.Deserialize<NestRpcResponseEnvelope<TResponse>>(responseJson, jsonSerializerOptions);
-                        if (envelope is not null && envelope.Response is not null)
+                        var envelope = JsonSerializer.Deserialize<TResponse>(responseJson, jsonSerializerOptions);
+                        if (envelope is not null)
                         {
-                            tcs.TrySetResult(envelope.Response);
+                            tcs.TrySetResult(envelope);
                         }
                     }
                     catch (Exception ex)
@@ -149,7 +146,6 @@ namespace Channel.Services
 
             await channel.BasicConsumeAsync(replyQueue.QueueName, true, consumer);
 
-            // Publish the RPC request
             await channel.BasicPublishAsync(
                 exchange: string.Empty,
                 routingKey: queue,
@@ -161,7 +157,6 @@ namespace Channel.Services
             using var cts = new CancellationTokenSource(timeout.Value);
             await using var _ = cts.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false);
 
-            Console.WriteLine("Done here");
             return await tcs.Task;
         }
     }

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Channel.Dto
+namespace ProductsApi.Dto
 {
-    public class NestRpcResponseEnvelope<T>
+    public class NestRpcResponse<T>
     {
         [JsonPropertyName("response")]
         public T? Response { get; set; }

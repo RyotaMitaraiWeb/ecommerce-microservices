@@ -8,16 +8,13 @@ namespace ProductsApi.Services
     {
         public async Task<InitializeProfileResultDto> InitializeProfile(InitializeProfilePayloadDto payload)
         {
-            InitializeProfileResultDto result = await channelService
-                .PublishNestJsRpcMessage<InitializeProfilePayloadDto, InitializeProfileResultDto>(
+            var result = await channelService
+                .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
                     payload: payload,
                     pattern: "init_profile",
                     queue: "profile_init");
 
-            return new InitializeProfileResultDto()
-            {
-                Email = payload.Email
-            };
+            return result.Response!;
         }
     }
 }

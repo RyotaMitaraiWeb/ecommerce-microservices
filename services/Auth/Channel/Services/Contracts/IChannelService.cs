@@ -5,7 +5,7 @@ namespace Channel.Services.Contracts
     public interface IChannelService : IAsyncDisposable
     {
         Task PublishMessage<TPayload>(TPayload payload, string pattern, string queue);
-        Task<TResponse> PublishNestJsRpcMessage<TPayload, TResponse>(
+        Task<TResponse> PublishRpcMessage<TPayload, TResponse>(
             TPayload payload,
             string pattern,
             string queue,
