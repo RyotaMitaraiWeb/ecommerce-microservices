@@ -8,7 +8,7 @@ namespace ProductsApi.Services
     {
         public async Task<InitializeProfileResultDto> InitializeProfile(InitializeProfilePayloadDto payload)
         {
-            var result = await channelService
+            NestRpcResponse<InitializeProfileResultDto> result = await channelService
                 .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
                     payload: payload,
                     pattern: "init_profile",
