@@ -52,7 +52,7 @@ namespace Auth.Web.Controllers
             };
 
 
-            _ = productApiService.InitializeProfile(profileData);
+            var test = await productApiService.InitializeProfile(profileData);
 
             // returning an empty string for location for now, as the API isn't exposing
             // a details endpoint for users

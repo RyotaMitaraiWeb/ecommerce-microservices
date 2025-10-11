@@ -1,6 +1,10 @@
-﻿using Channel.Services.Contracts;
+﻿using Channel.Dto;
+using Channel.Services.Contracts;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Channel.Services
 {
@@ -11,7 +15,13 @@ namespace Channel.Services
         private readonly string username = config["RABBITMQ_USER"] ?? throw new NullReferenceException(nameof(username));
         private readonly string password = config["RABBITMQ_PASSWORD"] ?? throw new NullReferenceException(nameof(password));
 
-        public async Task<IConnection> GetConnectionAsync()
+        private readonly JsonSerializerOptions jsonSerializerOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        private async Task<IConnection> GetConnectionAsync()
         {
             if (_connectionTask == null)
             {
@@ -41,6 +51,35 @@ namespace Channel.Services
                     GC.SuppressFinalize(this);
                 }
             }
+        }
+
+        public async Task PublishMessage<TPayload>(TPayload payload, string pattern, string queue)
+        {
+            var connection = await this.GetConnectionAsync();
+            await using var channel = await connection.CreateChannelAsync();
+
+            await channel.QueueDeclareAsync(
+                    queue: queue,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false
+                );
+
+            var rpcPayload = new RpcPayload<TPayload>()
+            {
+                Data = payload,
+                Pattern = pattern,
+            };
+
+            var json = JsonSerializer.Serialize(rpcPayload, jsonSerializerOptions);
+            var body = Encoding.UTF8.GetBytes(json);
+
+            await channel.BasicPublishAsync(
+                    exchange: "",
+                    routingKey: queue,
+                    mandatory: false,
+                    body: new ReadOnlyMemory<byte>(body)
+                );
         }
     }
 

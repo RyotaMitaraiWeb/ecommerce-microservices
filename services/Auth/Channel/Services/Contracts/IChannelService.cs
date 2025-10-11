@@ -4,6 +4,6 @@ namespace Channel.Services.Contracts
 {
     public interface IChannelService : IAsyncDisposable
     {
-        Task<IConnection> GetConnectionAsync();
+        Task PublishMessage<TPayload>(TPayload payload, string pattern, string queue);
     }
 }
