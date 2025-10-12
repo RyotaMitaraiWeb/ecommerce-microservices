@@ -1,9 +1,11 @@
-﻿using ProductsApi.Dto;
+﻿using OneOf;
+using ProductsApi.Dto;
+using ProductsApi.Enums;
 
 namespace ProductsApi.Services.Contracts
 {
     public interface IProductApiService
     {
-        Task<InitializeProfileResultDto> InitializeProfile(InitializeProfilePayloadDto payload);
+        Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(InitializeProfilePayloadDto payload);
     }
 }
