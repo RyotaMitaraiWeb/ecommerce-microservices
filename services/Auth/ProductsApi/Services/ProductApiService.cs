@@ -1,5 +1,6 @@
 ﻿using Channel.Services.Contracts;
 using Microsoft.Extensions.Configuration;
+using ProductsApi.Constants;
 using ProductsApi.Dto;
 using ProductsApi.Services.Contracts;
 
@@ -13,7 +14,7 @@ namespace ProductsApi.Services
             NestRpcResponse<InitializeProfileResultDto> result = await channelService
                 .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
                     payload: payload,
-                    pattern: "init_profile",
+                    pattern: Patterns.InitializeProfile,
                     queue: queue);
 
             return result.Response!;
