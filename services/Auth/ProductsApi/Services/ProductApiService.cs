@@ -7,7 +7,7 @@ namespace ProductsApi.Services
 {
     public class ProductApiService(IConfiguration config, IChannelService channelService) : IProductApiService
     {
-        private readonly string queue = config["RABBITMQ_INIT_PROFILE_QUEUE"] ?? throw new NullReferenceException(queue);
+        private readonly string queue = config["RABBITMQ_INIT_PROFILE_QUEUE"] ?? throw new NullReferenceException(nameof(queue));
         public async Task<InitializeProfileResultDto> InitializeProfile(InitializeProfilePayloadDto payload)
         {
             NestRpcResponse<InitializeProfileResultDto> result = await channelService
