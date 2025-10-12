@@ -23,6 +23,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_USER=admin
       - RABBITMQ_PASSWORD=admin
+      - RABBITMQ_INIT_PROFILE_QUEUE=profile_init
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
     ports:
