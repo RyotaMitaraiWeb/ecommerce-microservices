@@ -5,16 +5,17 @@ using Polly.Retry;
 using ProductsApi.Constants;
 using ProductsApi.Dto;
 using ProductsApi.Enums;
+using ProductsApi.Retry;
 using ProductsApi.Services.Contracts;
 
 namespace ProductsApi.Services
 {
-    public class ProductApiService(IConfiguration config, IChannelService channelService) : IProductApiService
+    public class ProductApiService(IConfiguration config, IChannelService channelService, IRetryProfileInit retry) : IProductApiService
     {
         private readonly string queue = config["RABBITMQ_INIT_PROFILE_QUEUE"] ?? throw new NullReferenceException(nameof(queue));
         public async Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(InitializeProfilePayloadDto payload)
         {
-            AsyncRetryPolicy retryPolicy = RetryPolicies.GetRetryPolicy(3);
+            AsyncRetryPolicy retryPolicy = retry.Policy;
 
             try
             {

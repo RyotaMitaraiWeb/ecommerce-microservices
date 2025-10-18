@@ -1,4 +1,7 @@
 using Auth.Web.Extensions;
+using Common.Retry;
+using ProductsApi.Constants;
+using ProductsApi.Retry;
 
 namespace Auth.Web
 {
@@ -11,6 +14,7 @@ namespace Auth.Web
             builder.Services.AddServices(builder);
             builder.Services.AddBearerAuthentication(builder);
             builder.Services.AddDatabase(builder);
+            builder.Services.AddSingleton<IRetryProfileInit, RetryProfileInit>();
 
             var app = builder.Build();
 
