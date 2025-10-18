@@ -8,5 +8,6 @@ namespace Auth.Services.Contracts
     {
         Task<OneOf<SuccessfulAuthenticationDto, CreateUserError>> CreateUser(RegisterDto register);
         Task<OneOf<SuccessfulAuthenticationDto, CheckCredentialsError>> CheckCredentials(LoginDto login);
+        Task DeleteUser(string userId);
     }
 }

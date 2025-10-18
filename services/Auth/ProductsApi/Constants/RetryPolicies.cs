@@ -10,13 +10,13 @@ namespace ProductsApi.Constants
                 .Handle<Exception>()
                 .WaitAndRetryAsync(
                     retryCount: retryCount,
-                    sleepDurationProvider: ThreeAttemptsOnSecondThenFourthThenEightSecond,
+                    sleepDurationProvider: ExpontentialBackOff,
                     onRetry: (exception, delay, attempt, context) =>
                     {
                         Console.WriteLine($"⚠️ Retry {attempt} after {delay.TotalSeconds}s due to {exception.Message}");
                     });
 
-        private static readonly Func<int, TimeSpan> ThreeAttemptsOnSecondThenFourthThenEightSecond =
+        private static readonly Func<int, TimeSpan> ExpontentialBackOff =
             (int attempt) => TimeSpan.FromSeconds(Math.Pow(2, attempt));
     }
 }

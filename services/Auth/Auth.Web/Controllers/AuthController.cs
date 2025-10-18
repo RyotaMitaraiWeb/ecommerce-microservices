@@ -52,11 +52,19 @@ namespace Auth.Web.Controllers
             };
 
 
-            var test = await productApiService.InitializeProfile(profileData);
+            var productsProfileResult = await productApiService.InitializeProfile(profileData);
 
-            // returning an empty string for location for now, as the API isn't exposing
-            // a details endpoint for users
-            return Created(string.Empty, payload);
+            if (productsProfileResult.Value is InitializeProfileResultDto)
+            {
+                // returning an empty string for location for now, as the API isn't exposing
+                // a details endpoint for users
+                return Created(string.Empty, payload);
+            }
+
+            Console.WriteLine("DID NOT INITIALIZE");
+
+            await userService.DeleteUser(payload.User.Id);
+            return StatusCode(500);
         }
 
         [Authorize]

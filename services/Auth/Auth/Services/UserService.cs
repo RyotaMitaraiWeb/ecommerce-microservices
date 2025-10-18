@@ -1,11 +1,11 @@
 ﻿using Auth.Dto;
 using Auth.Enums;
 using Auth.Services.Contracts;
-using BCrypt.Net;
 using Common.Extensions;
 using Database;
 using Database.Entities;
 using Microsoft.EntityFrameworkCore;
+
 using OneOf;
 namespace Auth.Services
 {
@@ -72,6 +72,11 @@ namespace Auth.Services
         private static bool ComparePasswords(string userPassword, string inputPassword)
         {
             return BCrypt.Net.BCrypt.Verify(inputPassword, userPassword, true);
+        }
+
+        public async Task DeleteUser(string userId)
+        {
+            await _dbContext.Users.Where(u => u.Id == Guid.Parse(userId)).ExecuteDeleteAsync();
         }
     }
 }
