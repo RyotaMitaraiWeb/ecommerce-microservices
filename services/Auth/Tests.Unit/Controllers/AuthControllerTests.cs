@@ -179,7 +179,7 @@ namespace Tests.Unit.Controllers
         }
 
         [Test]
-        public async Task Register_ReturnsInteralServerErrorWhenInitializationFailsAndDeletesTheProfile()
+        public async Task Register_ReturnsInteralServerErrorWhenInitializationFailsThenDoesNotGenerateJwtAndDeletesTheProfile()
         {
             // Arrange
             var register = new RegisterDto()
@@ -194,12 +194,6 @@ namespace Tests.Unit.Controllers
                 Id = Guid.NewGuid().ToString(),
             };
 
-            var claims = new UserClaimsDto()
-            {
-                Email = successfulAuth.Email,
-                Id = successfulAuth.Id,
-            };
-
             string token = "a";
 
             var createdToken = new CreatedJwtDto()
@@ -210,10 +204,6 @@ namespace Tests.Unit.Controllers
             UserService
                 .CreateUser(register)
                 .Returns(successfulAuth);
-
-            JwtService
-                .CreateTokenAsync(claims)
-                .ReturnsForAnyArgs(createdToken);
 
             ProductsApi
                 .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email))
@@ -227,6 +217,7 @@ namespace Tests.Unit.Controllers
             Assert.That(response?.StatusCode, Is.EqualTo(500));
 
             await UserService.Received(1).DeleteUser(successfulAuth.Id);
+            await JwtService.DidNotReceiveWithAnyArgs().CreateTokenAsync(Arg.Any<UserClaimsDto>());
         }
 
         [Test]

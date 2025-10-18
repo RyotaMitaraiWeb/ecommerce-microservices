@@ -44,8 +44,6 @@ namespace Auth.Web.Controllers
                 return Unauthorized();
             }
 
-            AuthPayloadDto payload = await CreateAuthPayload(result);
-
             InitializeProfilePayloadDto profileData = new()
             {
                 Email = register.Email,
@@ -56,6 +54,7 @@ namespace Auth.Web.Controllers
 
             if (productsProfileResult.Value is InitializeProfileResultDto)
             {
+                AuthPayloadDto payload = await CreateAuthPayload(result);
                 // returning an empty string for location for now, as the API isn't exposing
                 // a details endpoint for users
                 return Created(string.Empty, payload);
@@ -63,7 +62,7 @@ namespace Auth.Web.Controllers
 
             Console.WriteLine("DID NOT INITIALIZE");
 
-            await userService.DeleteUser(payload.User.Id);
+            await userService.DeleteUser(result.Id);
             return StatusCode(500);
         }
 
