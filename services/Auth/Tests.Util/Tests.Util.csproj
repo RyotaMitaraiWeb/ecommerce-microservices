@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
+    <ProjectReference Include="..\ProductsApi\ProductsApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>

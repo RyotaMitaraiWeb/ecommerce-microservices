@@ -6,6 +6,10 @@ using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using ProductsApi.Dto;
+using ProductsApi.Enums;
+using ProductsApi.Services.Contracts;
 
 namespace Tests.Unit.Controllers
 {
@@ -14,13 +18,16 @@ namespace Tests.Unit.Controllers
         public AuthController Controller { get; set; }
         private IUserService UserService { get; set; }
         private IJwtService JwtService { get; set; }
+        private IProductApiService ProductsApi { get; set; }
+
 
         [SetUp]
         public void Setup()
         {
             UserService = Substitute.For<IUserService>();
             JwtService = Substitute.For<IJwtService>();
-            Controller = new AuthController(UserService, JwtService);
+            ProductsApi = Substitute.For<IProductApiService>();
+            Controller = new AuthController(UserService, JwtService, ProductsApi);
         }
 
         [Test]
@@ -92,7 +99,7 @@ namespace Tests.Unit.Controllers
 
         [Test]
         [TestCase(CreateUserError.EmailIsTaken)]
-        public async Task Register_ReturnsUnauthorizedIfAnErrorIsReturned(CreateUserError error)
+        public async Task Register_ReturnsUnauthorizedIfAnErrorIsReturnedFromTheUserService(CreateUserError error)
         {
             // Arrange
             var register = new RegisterDto()
@@ -133,6 +140,12 @@ namespace Tests.Unit.Controllers
                 Id = successfulAuth.Id,
             };
 
+            var initializedProfile = new InitializeProfileResultDto()
+            {
+                Email = successfulAuth.Email,
+                Id = 1,
+            };
+
             string token = "a";
 
             var createdToken = new CreatedJwtDto()
@@ -140,8 +153,17 @@ namespace Tests.Unit.Controllers
                 Token = token,
             };
 
-            UserService.CreateUser(register).Returns(successfulAuth);
-            JwtService.CreateTokenAsync(claims).ReturnsForAnyArgs(createdToken);
+            UserService
+                .CreateUser(register)
+                .Returns(successfulAuth);
+
+            JwtService
+                .CreateTokenAsync(claims)
+                .ReturnsForAnyArgs(createdToken);
+
+            ProductsApi
+                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email))
+                .Returns(initializedProfile);
 
             // Act
             var result = await Controller.Register(register);
@@ -154,6 +176,57 @@ namespace Tests.Unit.Controllers
 
             Assert.That(value?.Token, Is.EqualTo(token));
             Assert.That(value.User.Email, Is.EqualTo(claims.Email));
+        }
+
+        [Test]
+        public async Task Register_ReturnsInteralServerErrorWhenInitializationFailsAndDeletesTheProfile()
+        {
+            // Arrange
+            var register = new RegisterDto()
+            {
+                Email = "abc@abc.com",
+                Password = "A!strongpassword1",
+            };
+
+            var successfulAuth = new SuccessfulAuthenticationDto()
+            {
+                Email = register.Email,
+                Id = Guid.NewGuid().ToString(),
+            };
+
+            var claims = new UserClaimsDto()
+            {
+                Email = successfulAuth.Email,
+                Id = successfulAuth.Id,
+            };
+
+            string token = "a";
+
+            var createdToken = new CreatedJwtDto()
+            {
+                Token = token,
+            };
+
+            UserService
+                .CreateUser(register)
+                .Returns(successfulAuth);
+
+            JwtService
+                .CreateTokenAsync(claims)
+                .ReturnsForAnyArgs(createdToken);
+
+            ProductsApi
+                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email))
+                .Returns(InitializeProfileErrors.ServerError);
+
+            // Act
+            var result = await Controller.Register(register);
+
+            // Assert
+            var response = result as StatusCodeResult;
+            Assert.That(response?.StatusCode, Is.EqualTo(500));
+
+            await UserService.Received(1).DeleteUser(successfulAuth.Id);
         }
 
         [Test]
