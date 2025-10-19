@@ -25,9 +25,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Auth\Auth.csproj" />
+    <ProjectReference Include="..\Channel\Channel.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\Jwt\Jwt.csproj" />
+    <ProjectReference Include="..\ProductsApi\ProductsApi.csproj" />
   </ItemGroup>
 
 </Project>

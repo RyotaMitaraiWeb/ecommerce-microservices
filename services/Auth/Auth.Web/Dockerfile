@@ -35,6 +35,8 @@ COPY Auth ./Auth
 COPY Jwt ./Jwt
 COPY Common ./Common
 COPY Database ./Database
+COPY ProductsApi ./ProductsApi
+COPY Channel ./Channel
 COPY Auth.Web/Migrations ./Migrations
 WORKDIR /app/Auth.Web
 RUN dotnet tool install --global dotnet-ef
