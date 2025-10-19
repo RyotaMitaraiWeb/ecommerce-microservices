@@ -60,8 +60,6 @@ namespace Auth.Web.Controllers
                 return Created(string.Empty, payload);
             }
 
-            Console.WriteLine("DID NOT INITIALIZE");
-
             await userService.DeleteUser(result.Id);
             return StatusCode(500);
         }

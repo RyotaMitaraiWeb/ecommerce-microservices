@@ -116,5 +116,21 @@ namespace Tests.Integration.Services
             var user = result.AsT0;
             Assert.That(user.Email, Is.EqualTo(email));
         }
+
+        [Test]
+        public async Task DeleteUserHardDeletesAUserSuccessfully()
+        {
+            // Arramge
+            var user = TestDB.Users[0];
+            string id = user.Id.ToString();
+
+            // Act
+            await Service.DeleteUser(id);
+
+            // Assert
+            var users = this.DbContext.Users.ToList();
+            Assert.That(users, Has.Count.EqualTo(TestDB.Users.Count - 1));
+            Assert.That(users.Any(u => u.Id == user.Id), Is.False);
+        }
     }
 }
