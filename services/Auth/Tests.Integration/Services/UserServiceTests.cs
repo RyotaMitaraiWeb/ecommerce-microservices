@@ -120,7 +120,7 @@ namespace Tests.Integration.Services
         [Test]
         public async Task DeleteUserHardDeletesAUserSuccessfully()
         {
-            // Arramge
+            // Arrange
             var user = TestDB.Users[0];
             string id = user.Id.ToString();
 
@@ -131,6 +131,19 @@ namespace Tests.Integration.Services
             var users = this.DbContext.Users.ToList();
             Assert.That(users, Has.Count.EqualTo(TestDB.Users.Count - 1));
             Assert.That(users.Any(u => u.Id == user.Id), Is.False);
+        }
+
+        [Test]
+        public async Task DeleteUserHardHandlesDeletionOfNonExistantUsersProperly()
+        {
+            // Arrange
+            string id = Guid.NewGuid().ToString();
+
+            // Act
+            await Service.DeleteUser(id);
+
+            // Assert - not throwing is enough
+            Assert.Pass();
         }
     }
 }
