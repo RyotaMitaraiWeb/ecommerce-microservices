@@ -14,6 +14,7 @@ import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 import { isEmailIsAlreadyTakenError } from './constants/errorChecks';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
 
 @Injectable()
 export class ProfilesService {
@@ -30,6 +31,21 @@ export class ProfilesService {
 
     if (!profile.confirmed) {
       return Result.err(GetByIdErrors.NotConfirmed);
+    }
+
+    return Result.ok(Mapper.profile.toDto(profile));
+  }
+
+  async getByEmail(
+    email: string,
+  ): Promise<Result<ProfileDto, GetByEmailErrors>> {
+    const profile = await this.repository.findOneBy({ email });
+    if (!profile) {
+      return Result.err(GetByEmailErrors.DoesNotExist);
+    }
+
+    if (!profile.confirmed) {
+      return Result.err(GetByEmailErrors.NotConfirmed);
     }
 
     return Result.ok(Mapper.profile.toDto(profile));
