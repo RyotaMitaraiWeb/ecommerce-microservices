@@ -15,6 +15,7 @@ namespace Channel.Services
         private readonly string hostName = config["RABBITMQ_HOST"] ?? throw new NullReferenceException(nameof(hostName));
         private readonly string username = config["RABBITMQ_USER"] ?? throw new NullReferenceException(nameof(username));
         private readonly string password = config["RABBITMQ_PASSWORD"] ?? throw new NullReferenceException(nameof(password));
+        private readonly int port = int.Parse(config["RABBITMQ_PORT"] ?? "5672");
 
         private readonly JsonSerializerOptions jsonSerializerOptions = new()
         {
@@ -133,7 +134,7 @@ namespace Channel.Services
                 ConnectionFactory factory = new()
                 {
                     HostName = hostName,
-                    Port = 5672,
+                    Port = port,
                     UserName = username,
                     Password = password,
                 };
