@@ -1,24 +1,31 @@
-import { AuthGuard } from './auth.guard';
+import { AuthRpcGuard } from './auth-rpc.guard';
 import { AuthService } from 'src/auth/auth.service';
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { Result } from 'src/common/result/result';
 import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 import { ExtractClaimsFromTokenErrors } from 'src/auth/types/ExtractClaimsFromTokenErrors';
+import { RpcException } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 describe('AuthGuard', () => {
-  let guard: AuthGuard;
+  let guard: AuthRpcGuard;
   let authService: AuthService;
 
   const executionContext: ExecutionContext = {
-    switchToHttp() {
+    switchToRpc() {
       return {
-        getRequest() {
+        getContext() {
           return {
-            headers: {
-              authorization: 'Bearer jwt',
+            getMessage() {
+              return {
+                properties: {
+                  headers: {
+                    authorization: 'Bearer jwt',
+                  },
+                },
+              };
             },
           };
         },
@@ -28,10 +35,10 @@ describe('AuthGuard', () => {
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [AuthGuard, AuthService, JwtService, ConfigService],
+      providers: [AuthRpcGuard, AuthService, JwtService, ConfigService],
     }).compile();
 
-    guard = moduleRef.get(AuthGuard);
+    guard = moduleRef.get(AuthRpcGuard);
     authService = moduleRef.get(AuthService);
   });
 
@@ -62,9 +69,10 @@ describe('AuthGuard', () => {
         .mockResolvedValueOnce(Result.err(error));
 
       // Act & Assert
+
       await expect(
         async () => await guard.canActivate(executionContext),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(RpcException);
     },
   );
 });
