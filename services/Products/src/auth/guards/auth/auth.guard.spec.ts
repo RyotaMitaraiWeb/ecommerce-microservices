@@ -3,55 +3,22 @@ import { AuthService } from 'src/auth/auth.service';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { Result } from 'src/common/result/result';
-import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 import { ExtractClaimsFromTokenErrors } from 'src/auth/types/ExtractClaimsFromTokenErrors';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RpcException } from '@nestjs/microservices';
+import {
+  httpExecutionContext,
+  rpcExecutionContext,
+  user,
+} from 'src/auth/test-utils/mocks';
+import { Request } from 'express';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let authService: AuthService;
 
-  const httpExecutionContext: ExecutionContext = {
-    switchToHttp() {
-      return {
-        getRequest() {
-          return {
-            headers: {
-              authorization: 'Bearer jwt',
-            },
-          };
-        },
-      };
-    },
-    getType() {
-      return 'http';
-    },
-  } as unknown as ExecutionContext;
-
-  const rpcExecutionContext: ExecutionContext = {
-    switchToRpc() {
-      return {
-        getContext() {
-          return {
-            getMessage() {
-              return {
-                properties: {
-                  headers: {
-                    authorization: 'Bearer jwt',
-                  },
-                },
-              };
-            },
-          };
-        },
-      };
-    },
-    getType() {
-      return 'rpc';
-    },
-  } as unknown as ExecutionContext;
+  let request: Request;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -60,63 +27,74 @@ describe('AuthGuard', () => {
 
     guard = moduleRef.get(AuthGuard);
     authService = moduleRef.get(AuthService);
+    request = {
+      headers: {
+        authorization: 'Bearer jwt',
+      },
+    } as Request;
   });
 
-  it('should return true when AuthService validates the JWT (HTTP)', async () => {
+  it('should return true when AuthService validates the JWT (HTTP) and attaches it to the request', async () => {
     // Arrange
+
+    const context = httpExecutionContext(request);
     jest
       .spyOn(authService, 'extractUserClaims')
-      .mockResolvedValueOnce(Result.ok(new UserClaimsDto()));
+      .mockResolvedValueOnce(Result.ok(user));
 
     // Act
-    const result = await guard.canActivate(httpExecutionContext);
+    const result = await guard.canActivate(context);
 
     // Assert
     expect(result).toBe(true);
+    expect(request.user).toMatchObject(user);
   });
 
   it('should return true when AuthService validates the JWT (RPC)', async () => {
     // Arrange
+    const data: Record<string, unknown> = {};
+    const context = rpcExecutionContext(data);
     jest
       .spyOn(authService, 'extractUserClaims')
-      .mockResolvedValueOnce(Result.ok(new UserClaimsDto()));
+      .mockResolvedValueOnce(Result.ok(user));
 
     // Act
-    const result = await guard.canActivate(rpcExecutionContext);
+    const result = await guard.canActivate(context);
 
     // Assert
     expect(result).toBe(true);
+    expect(data.user).toMatchObject(user);
   });
 
   it.each([
     [
       ExtractClaimsFromTokenErrors.Expired,
-      httpExecutionContext,
+      httpExecutionContext(),
       UnauthorizedException,
     ],
     [
       ExtractClaimsFromTokenErrors.MalformedOrInvalidSignature,
-      httpExecutionContext,
+      httpExecutionContext(),
       UnauthorizedException,
     ],
     [
       ExtractClaimsFromTokenErrors.NoToken,
-      httpExecutionContext,
+      httpExecutionContext(),
       UnauthorizedException,
     ],
     [
       ExtractClaimsFromTokenErrors.Unknown,
-      httpExecutionContext,
+      httpExecutionContext(),
       UnauthorizedException,
     ],
-    [ExtractClaimsFromTokenErrors.Expired, rpcExecutionContext, RpcException],
+    [ExtractClaimsFromTokenErrors.Expired, rpcExecutionContext(), RpcException],
     [
       ExtractClaimsFromTokenErrors.MalformedOrInvalidSignature,
-      rpcExecutionContext,
+      rpcExecutionContext(),
       RpcException,
     ],
-    [ExtractClaimsFromTokenErrors.NoToken, rpcExecutionContext, RpcException],
-    [ExtractClaimsFromTokenErrors.Unknown, rpcExecutionContext, RpcException],
+    [ExtractClaimsFromTokenErrors.NoToken, rpcExecutionContext(), RpcException],
+    [ExtractClaimsFromTokenErrors.Unknown, rpcExecutionContext(), RpcException],
   ])(
     'Throws correct exception for specific errors',
     async (

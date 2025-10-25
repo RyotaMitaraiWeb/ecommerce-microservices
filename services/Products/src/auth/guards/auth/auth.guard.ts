@@ -5,54 +5,61 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
-import type { Request } from 'express';
 import { errorMessages } from 'src/auth/constants/errorMessages';
-import { RmqContext, RpcException } from '@nestjs/microservices';
-import { ConsumeMessage } from 'amqplib';
+import { RpcException } from '@nestjs/microservices';
 import { UnauthorizedRpcErrorResponse } from 'src/common/rpc/errors/UnauthorizedRpcErrorResponse';
+import { extractBearerTokenFromExecutionContext } from 'src/auth/util/extractBearerTokenFromExecutionContext';
+import { Result } from 'src/common/result/result';
+import { ExtractClaimsFromTokenErrors } from 'src/auth/types/ExtractClaimsFromTokenErrors';
+import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<true> {
-    const requestType = context.getType();
+    const bearerToken = extractBearerTokenFromExecutionContext(context);
 
-    switch (requestType) {
-      case 'http':
-        await this.authenticateHttpRequest(context);
-        break;
-      case 'rpc':
-        await this.authenticateRpcRequest(context);
-        break;
+    const result = await this.authService.extractUserClaims(bearerToken);
+
+    if (result.isErr) {
+      this.handleUnauthenticatedError(result, context);
     }
+
+    this.attachUser(context, result.value);
 
     return true;
   }
 
-  private async authenticateHttpRequest(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest<Request>();
-    const bearerToken = request.headers.authorization;
+  private handleUnauthenticatedError(
+    result: Result<unknown, ExtractClaimsFromTokenErrors>,
+    context: ExecutionContext,
+  ) {
+    const requestType = context.getType();
 
-    const result = await this.authService.extractUserClaims(bearerToken);
-
-    if (result.isErr) {
-      throw new UnauthorizedException(errorMessages[result.error]);
+    switch (requestType) {
+      case 'http':
+        throw new UnauthorizedException(errorMessages[result.error]);
+      case 'rpc':
+        throw new RpcException(
+          new UnauthorizedRpcErrorResponse(errorMessages[result.error]),
+        );
+      default:
+        throw new Error('Unsupported or invalid request type');
     }
   }
 
-  private async authenticateRpcRequest(context: ExecutionContext) {
-    const rmqContext = context.switchToRpc().getContext<RmqContext>();
-    const message = rmqContext.getMessage() as ConsumeMessage;
-    const headers = message.properties.headers;
-    const bearerToken = headers?.authorization as string | undefined | null;
-
-    const result = await this.authService.extractUserClaims(bearerToken);
-
-    if (result.isErr) {
-      throw new RpcException(
-        new UnauthorizedRpcErrorResponse(errorMessages[result.error]),
-      );
+  private attachUser(context: ExecutionContext, user: UserClaimsDto) {
+    switch (context.getType()) {
+      case 'http':
+        context.switchToHttp().getRequest<Request>().user = user;
+        break;
+      case 'rpc':
+        context.switchToRpc().getData<Record<string, unknown>>().user = user;
+        break;
+      default:
+        throw new Error('Unsupported or invalid context type');
     }
   }
 }
