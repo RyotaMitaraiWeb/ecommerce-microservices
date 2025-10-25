@@ -24,14 +24,8 @@ import {
   profileInitializationErrors,
 } from './constants/errorMessages';
 import { EditErrors } from './types/EditErrors';
-import {
-  MessagePattern,
-  Payload,
-  RmqContext,
-  RpcException,
-} from '@nestjs/microservices';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { ProfileInitPayload } from './types/profile-init';
-import { Channel } from 'amqplib';
 import { CreateErrors } from './types/CreateErrors';
 
 @Controller('profiles')
@@ -106,8 +100,4 @@ export class ProfilesController {
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
-}
-
-export function getChannel(context: RmqContext): Channel {
-  return context.getChannelRef() as Channel;
 }
