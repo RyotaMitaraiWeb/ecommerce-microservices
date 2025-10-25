@@ -7,12 +7,13 @@ import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 import { ExtractClaimsFromTokenErrors } from 'src/auth/types/ExtractClaimsFromTokenErrors';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RpcException } from '@nestjs/microservices';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let authService: AuthService;
 
-  const executionContext: ExecutionContext = {
+  const httpExecutionContext: ExecutionContext = {
     switchToHttp() {
       return {
         getRequest() {
@@ -23,6 +24,32 @@ describe('AuthGuard', () => {
           };
         },
       };
+    },
+    getType() {
+      return 'http';
+    },
+  } as unknown as ExecutionContext;
+
+  const rpcExecutionContext: ExecutionContext = {
+    switchToRpc() {
+      return {
+        getContext() {
+          return {
+            getMessage() {
+              return {
+                properties: {
+                  headers: {
+                    authorization: 'Bearer jwt',
+                  },
+                },
+              };
+            },
+          };
+        },
+      };
+    },
+    getType() {
+      return 'rpc';
     },
   } as unknown as ExecutionContext;
 
@@ -35,27 +62,68 @@ describe('AuthGuard', () => {
     authService = moduleRef.get(AuthService);
   });
 
-  it('should return true when AuthService validates the JWT', async () => {
+  it('should return true when AuthService validates the JWT (HTTP)', async () => {
     // Arrange
     jest
       .spyOn(authService, 'extractUserClaims')
       .mockResolvedValueOnce(Result.ok(new UserClaimsDto()));
 
     // Act
-    const result = await guard.canActivate(executionContext);
+    const result = await guard.canActivate(httpExecutionContext);
+
+    // Assert
+    expect(result).toBe(true);
+  });
+
+  it('should return true when AuthService validates the JWT (RPC)', async () => {
+    // Arrange
+    jest
+      .spyOn(authService, 'extractUserClaims')
+      .mockResolvedValueOnce(Result.ok(new UserClaimsDto()));
+
+    // Act
+    const result = await guard.canActivate(rpcExecutionContext);
 
     // Assert
     expect(result).toBe(true);
   });
 
   it.each([
-    ExtractClaimsFromTokenErrors.Expired,
-    ExtractClaimsFromTokenErrors.MalformedOrInvalidSignature,
-    ExtractClaimsFromTokenErrors.NoToken,
-    ExtractClaimsFromTokenErrors.Unknown,
+    [
+      ExtractClaimsFromTokenErrors.Expired,
+      httpExecutionContext,
+      UnauthorizedException,
+    ],
+    [
+      ExtractClaimsFromTokenErrors.MalformedOrInvalidSignature,
+      httpExecutionContext,
+      UnauthorizedException,
+    ],
+    [
+      ExtractClaimsFromTokenErrors.NoToken,
+      httpExecutionContext,
+      UnauthorizedException,
+    ],
+    [
+      ExtractClaimsFromTokenErrors.Unknown,
+      httpExecutionContext,
+      UnauthorizedException,
+    ],
+    [ExtractClaimsFromTokenErrors.Expired, rpcExecutionContext, RpcException],
+    [
+      ExtractClaimsFromTokenErrors.MalformedOrInvalidSignature,
+      rpcExecutionContext,
+      RpcException,
+    ],
+    [ExtractClaimsFromTokenErrors.NoToken, rpcExecutionContext, RpcException],
+    [ExtractClaimsFromTokenErrors.Unknown, rpcExecutionContext, RpcException],
   ])(
     'Throws correct exception for specific errors',
-    async (error: ExtractClaimsFromTokenErrors) => {
+    async (
+      error: ExtractClaimsFromTokenErrors,
+      context: ExecutionContext,
+      exception: typeof UnauthorizedException | typeof RpcException,
+    ) => {
       // Arrange
       jest
         .spyOn(authService, 'extractUserClaims')
@@ -63,8 +131,8 @@ describe('AuthGuard', () => {
 
       // Act & Assert
       await expect(
-        async () => await guard.canActivate(executionContext),
-      ).rejects.toThrow(UnauthorizedException);
+        async () => await guard.canActivate(context),
+      ).rejects.toThrow(exception);
     },
   );
 });
