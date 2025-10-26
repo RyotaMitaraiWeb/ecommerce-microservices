@@ -24,6 +24,7 @@ import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto'
 import { ProfileInitPayload } from './types/profile-init';
 import { RpcException } from '@nestjs/microservices';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
+import { AuthModule } from 'src/auth/auth.module';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -34,7 +35,7 @@ describe('ProfilesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProfilesController],
       providers: [ProfilesService, profileRepositoryStub],
-      imports: [ClockModule],
+      imports: [ClockModule, AuthModule],
     }).compile();
 
     controller = module.get<ProfilesController>(ProfilesController);
