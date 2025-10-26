@@ -5,7 +5,7 @@ import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
 export function Auth() {
   return applyDecorators(
     UseGuards(AuthGuard),
-    ApiBearerAuth(),
+    ApiBearerAuth('jwt'),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
   );
 }
