@@ -12,6 +12,14 @@ export class AuthService {
     return this.configService.getOrThrow<string>('PRODUCTS_JWT_SECRET');
   }
 
+  private get jwtIssuer() {
+    return this.configService.getOrThrow<string>('PRODUCTS_JWT_ISSUER');
+  }
+
+  private get jwtAudience() {
+    return this.configService.getOrThrow<string>('PRODUCTS_JWT_AUDIENCE');
+  }
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -31,6 +39,8 @@ export class AuthService {
         token,
         {
           secret: this.jwtSecret,
+          issuer: this.jwtIssuer,
+          audience: this.jwtAudience,
         },
       );
 
