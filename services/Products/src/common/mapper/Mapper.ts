@@ -3,19 +3,19 @@ import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 
 const AUTH_MAPPER = {
   toUserClaims(payload: Record<string, string>) {
-    const { email, id } = payload;
+    const { Email, Id } = payload;
 
-    if (!email) {
+    if (!Email) {
       throw new Error('No email found in the payload');
     }
 
-    if (!id) {
+    if (!Id) {
       throw new Error('No ID found in the payload');
     }
 
     const userClaims = new UserClaimsDto();
-    userClaims.email = email;
-    userClaims.id = id;
+    userClaims.email = Email;
+    userClaims.id = Id;
 
     return userClaims;
   },

@@ -37,7 +37,7 @@ describe('AuthService', () => {
     it('Returns a payload when successful', async () => {
       // Arrange
       const mockResult = Result.ok(
-        Mapper.auth.toUserClaims({ id: '1', email: 'abc@abc.com' }),
+        Mapper.auth.toUserClaims({ Id: '1', Email: 'abc@abc.com' }),
       );
 
       jest
