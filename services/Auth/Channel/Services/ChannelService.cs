@@ -63,6 +63,7 @@ namespace Channel.Services
             TPayload payload,
             string pattern,
             string queue,
+            string jwt,
             TimeSpan? timeout = null)
         {
             timeout ??= TimeSpan.FromSeconds(10);
@@ -83,7 +84,9 @@ namespace Channel.Services
             BasicProperties props = new()
             {
                 ReplyTo = replyQueue.QueueName,
-                CorrelationId = correlationId
+                CorrelationId = correlationId,
+                Headers = ConstructHeaders(jwt),
+
             };
 
             var tcs = new TaskCompletionSource<TResponse>();
@@ -158,6 +161,17 @@ namespace Channel.Services
             byte[] body = Encoding.UTF8.GetBytes(json);
 
             return new ReadOnlyMemory<byte>(body);
+        }
+
+        private IDictionary<string, object?> ConstructHeaders(string jwt)
+        {
+            return new Dictionary<string, object?>()
+            {
+                {
+                    "authorization",
+                    jwt.StartsWith("Bearer ") ? jwt : $"Bearer {jwt}"
+                }
+            };
         }
     }
 

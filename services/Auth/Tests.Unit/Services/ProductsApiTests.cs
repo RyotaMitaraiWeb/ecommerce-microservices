@@ -55,11 +55,12 @@ namespace Tests.Unit.Services
                 .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
                     Arg.Is<InitializeProfilePayloadDto>(p => p.Email == email),
                     ProductsApi.Constants.Patterns.InitializeProfile,
-                    Queue)
+                    Queue,
+                    "jwt")
                 .Returns(rpcResponse);
 
             // Act
-            var result = await ProductApiService.InitializeProfile(payload);
+            var result = await ProductApiService.InitializeProfile(payload, "jwt");
             var response = result.AsT0;
 
             // Assert
@@ -83,11 +84,12 @@ namespace Tests.Unit.Services
                 .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
                     Arg.Is<InitializeProfilePayloadDto>(p => p.Email == email),
                     ProductsApi.Constants.Patterns.InitializeProfile,
-                    Queue)
+                    Queue,
+                    "jwt")
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await ProductApiService.InitializeProfile(payload);
+            var result = await ProductApiService.InitializeProfile(payload, "jwt");
             var response = result.AsT1;
 
             // Assert
