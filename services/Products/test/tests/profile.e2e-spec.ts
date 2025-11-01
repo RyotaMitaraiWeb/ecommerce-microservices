@@ -18,6 +18,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { InitializeProfileResultDto } from 'src/profiles/dto/initialize-profile-result-dto';
 import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
 import { from, map, switchMap, tap } from 'rxjs';
+import { populateJwtEnvironmentVariables } from '../util/jwt';
 
 describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -26,6 +27,7 @@ describe('ProfilesController (e2e)', () => {
   beforeAll(() => {
     app = global.__NESTAPP__;
     rmqClient = global.__RMQCLIENT__;
+    populateJwtEnvironmentVariables();
   });
 
   beforeEach(async () => {

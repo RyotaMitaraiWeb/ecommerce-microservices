@@ -19,6 +19,7 @@ import {
   ClientProxyFactory,
   Transport,
 } from '@nestjs/microservices';
+import { populateJwtEnvironmentVariables } from './util/jwt';
 
 declare global {
   var __POSTGRESCONTAINER__: StartedPostgreSqlContainer;
@@ -28,10 +29,6 @@ declare global {
 }
 
 class CustomEnvironment extends NodeEnvironment {
-  constructor(config: any, context: any) {
-    super(config, context);
-  }
-
   private readonly password = 'kklwqlkQAas!';
   private readonly username = 'testuser';
   private readonly db = 'testdb';
@@ -44,14 +41,21 @@ class CustomEnvironment extends NodeEnvironment {
   private rmqClient: ClientProxy;
 
   async setup() {
-    await Promise.all([this.initializeContainer(), this.initializeRabbitMQ()]);
-    await this.initializeDb();
+    try {
+      await Promise.all([
+        this.initializeContainer(),
+        this.initializeRabbitMQ(),
+      ]);
+      await this.initializeDb();
 
-    this.setEnvironmentVariables();
+      this.setEnvironmentVariables();
+      await this.startRmqClient();
 
-    await this.startRmqClient();
-    await this.startApp();
-    await super.setup();
+      await this.startApp();
+      await super.setup();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async teardown() {
@@ -130,9 +134,12 @@ class CustomEnvironment extends NodeEnvironment {
 
   private async initializeRabbitMQ() {
     console.log('Starting RabbitMQ container...');
-    this.rmq = await new RabbitMQContainer('rabbitmq:3-management')
-      .withExposedPorts(5672, 15672)
+    this.rmq = await new RabbitMQContainer('rabbitmq:3')
+      .withExposedPorts(5672)
+      .withReuse()
       .start();
+
+    console.log('started !!!');
 
     this.global.__RABBITCONTAINER__ = this.rmq;
     console.log(`RabbitMQ started: ${this.rmq.getAmqpUrl()}`);
@@ -160,6 +167,7 @@ class CustomEnvironment extends NodeEnvironment {
   private setEnvironmentVariables() {
     process.env.RABBITMQ_URL = this.rmq.getAmqpUrl();
     process.env.RABBITMQ_QUEUE = this.profileInitQueue;
+    populateJwtEnvironmentVariables();
 
     console.log('Environment variables set for NestJS app');
   }
