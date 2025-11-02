@@ -90,6 +90,10 @@ export class ProfilesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() details: EditProfileDto,
   ) {
+    if (details.isEmpty) {
+      return;
+    }
+
     const result = await this.profilesService.edit(details, id);
 
     if (result.isErr) {

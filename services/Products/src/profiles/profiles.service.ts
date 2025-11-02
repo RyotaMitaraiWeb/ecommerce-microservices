@@ -121,8 +121,13 @@ export class ProfilesService {
       return Result.err(EditErrors.IsNotConfirmed);
     }
 
-    profile.firstName = details.firstName;
-    profile.lastName = details.lastName;
+    if (details.firstName) {
+      profile.firstName = details.firstName;
+    }
+
+    if (details.lastName) {
+      profile.lastName = details.lastName;
+    }
 
     await this.repository.save(profile);
 

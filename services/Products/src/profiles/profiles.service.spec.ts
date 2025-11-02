@@ -251,7 +251,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
 
       // Act
-      const result = await service.create(editProfileBody, 1, today);
+      const result = await service.create(createProfileBody, 1, today);
 
       // Assert
       expect(result.error).toBe(CreateErrors.IsConfirmed);

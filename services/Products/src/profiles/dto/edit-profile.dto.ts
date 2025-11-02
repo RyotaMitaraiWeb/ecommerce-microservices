@@ -1,18 +1,8 @@
-import { MaxLength, MinLength } from 'class-validator';
-import {
-  firstNameValidationRules,
-  lastNameValidationRules,
-} from '../constants/validationRules';
-import { IsLegalName } from '../validators/validName/validName.validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProfileDto } from './create-profile.dto';
 
-export class EditProfileDto {
-  @MaxLength(firstNameValidationRules.maxLength)
-  @MinLength(firstNameValidationRules.minLength)
-  @IsLegalName()
-  firstName: string;
-
-  @MaxLength(lastNameValidationRules.maxLength)
-  @MinLength(lastNameValidationRules.minLength)
-  @IsLegalName()
-  lastName: string;
+export class EditProfileDto extends PartialType(CreateProfileDto) {
+  get isEmpty() {
+    return Object.values(this).filter(Boolean).length === 0;
+  }
 }

@@ -227,7 +227,6 @@ describe('ProfilesController (e2e)', () => {
 
       const requestBody = new EditProfileDto();
       requestBody.firstName = 'Ryota';
-      requestBody.lastName = 'Mitarai';
 
       const response = await request(app.getHttpServer())
         .patch(`/profiles/${profile.id}`)
@@ -241,7 +240,7 @@ describe('ProfilesController (e2e)', () => {
 
       const editedProfile = editedProfileResponse.body as ProfileDto;
       expect(editedProfile.firstName).toBe('Ryota');
-      expect(editedProfile.lastName).toBe('Mitarai');
+      expect(editedProfile.lastName).toBe(profile.lastName);
     });
 
     it('Returns 403 if the profile is not confirmed', async () => {
@@ -302,7 +301,6 @@ describe('ProfilesController (e2e)', () => {
     it('Returns 400 if first name is not valid', async () => {
       const payload = new EditProfileDto();
       payload.firstName = '!Ryota'; // special symbols are not allowed
-      payload.lastName = 'Mitarai';
 
       const profile = profiles.find(
         (profile) => !profile.confirmed && !profile.deletedAt,
@@ -317,7 +315,6 @@ describe('ProfilesController (e2e)', () => {
 
     it('Returns 400 if last name is not valid', async () => {
       const payload = new EditProfileDto();
-      payload.firstName = 'Ryota';
       payload.lastName = '!Mitarai'; // special symbols are not allowed
 
       const profile = profiles.find(

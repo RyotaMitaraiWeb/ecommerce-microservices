@@ -25,6 +25,7 @@ import { ProfileInitPayload } from './types/profile-init';
 import { RpcException } from '@nestjs/microservices';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 import { AuthModule } from 'src/auth/auth.module';
+import { EditProfileDto } from './dto/edit-profile.dto';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -206,6 +207,24 @@ describe('ProfilesController', () => {
       // Assert
       expect(result).toBeUndefined();
     });
+
+    it.each([{}, { firstName: '', lastName: undefined }, { lastName: null }])(
+      'Handles correctly the cases where no viable request body is provided',
+      async (requestBody: object) => {
+        // Arrange
+        const dto = new EditProfileDto();
+        Object.assign(dto, requestBody);
+
+        const spy = jest.spyOn(profileService, 'edit');
+
+        // Act
+        const result = await controller.editProfile(1, dto);
+
+        // Assert
+        expect(result).toBeUndefined();
+        expect(spy).not.toHaveBeenCalled();
+      },
+    );
 
     it.each([
       [EditErrors.IsNotConfirmed, ForbiddenException],
