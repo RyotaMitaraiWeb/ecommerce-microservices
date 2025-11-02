@@ -243,6 +243,26 @@ describe('ProfilesController (e2e)', () => {
       expect(editedProfile.lastName).toBe(profile.lastName);
     });
 
+    it('Handles the case where a non-viable body is provided', async () => {
+      const profile = profiles.find(
+        (profile) => profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send({});
+
+      expect(response.status).toBe(HttpStatus.NO_CONTENT);
+
+      const editedProfileResponse = await request(app.getHttpServer()).get(
+        `/profiles/${profile.id}`,
+      );
+
+      const editedProfile = editedProfileResponse.body as ProfileDto;
+      expect(editedProfile.firstName).toBe(profile.firstName);
+      expect(editedProfile.lastName).toBe(profile.lastName);
+    });
+
     it('Returns 403 if the profile is not confirmed', async () => {
       const profile = profiles.find((profile) => !profile.confirmed)!;
 
