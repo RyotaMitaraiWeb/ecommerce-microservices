@@ -10,7 +10,7 @@ import {
 } from '@testcontainers/rabbitmq';
 import { DataSource } from 'typeorm';
 import { Profile } from '../src/profiles/entities/profile.entity';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { App } from 'supertest/types';
 import { AppModule } from 'src/app.module';
@@ -20,6 +20,8 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { populateJwtEnvironmentVariables } from './util/jwt';
+import helmet from 'helmet';
+import { TrimPipe } from 'src/common/trim/trim.pipe';
 
 declare global {
   var __POSTGRESCONTAINER__: StartedPostgreSqlContainer;
@@ -42,10 +44,8 @@ class CustomEnvironment extends NodeEnvironment {
 
   async setup() {
     try {
-      await Promise.all([
-        this.initializeContainer(),
-        this.initializeRabbitMQ(),
-      ]);
+      await this.initializeContainer();
+      await this.initializeRabbitMQ();
       await this.initializeDb();
 
       this.setEnvironmentVariables();
@@ -112,6 +112,9 @@ class CustomEnvironment extends NodeEnvironment {
       .compile();
 
     const app: INestApplication<App> = moduleFixture.createNestApplication();
+    app.use(helmet());
+    app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    app.useGlobalPipes(new TrimPipe());
     this.global.__NESTAPP__ = app;
     this.app = app;
     await app.init();
@@ -134,12 +137,10 @@ class CustomEnvironment extends NodeEnvironment {
 
   private async initializeRabbitMQ() {
     console.log('Starting RabbitMQ container...');
-    this.rmq = await new RabbitMQContainer('rabbitmq:3')
+    this.rmq = await new RabbitMQContainer('rabbitmq:3.13-alpine')
       .withExposedPorts(5672)
-      .withReuse()
+      .withStartupTimeout(120_000)
       .start();
-
-    console.log('started !!!');
 
     this.global.__RABBITCONTAINER__ = this.rmq;
     console.log(`RabbitMQ started: ${this.rmq.getAmqpUrl()}`);
