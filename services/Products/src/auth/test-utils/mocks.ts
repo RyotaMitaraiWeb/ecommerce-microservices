@@ -4,8 +4,8 @@ import { Mapper } from 'src/common/mapper/Mapper';
 import { Request } from 'express';
 
 export const user: UserClaimsDto = Mapper.auth.toUserClaims({
-  id: '1',
-  email: 'abc@abc.com',
+  Id: '1',
+  Email: 'abc@abc.com',
 });
 
 export const httpExecutionContext = (request?: Request) =>

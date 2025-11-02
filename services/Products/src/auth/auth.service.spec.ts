@@ -8,8 +8,7 @@ import {
 } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ExtractClaimsFromTokenErrors } from './types/ExtractClaimsFromTokenErrors';
-import { Result } from 'src/common/result/result';
-import { Mapper } from 'src/common/mapper/Mapper';
+import { user } from './test-utils/mocks';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -36,20 +35,16 @@ describe('AuthService', () => {
   describe('extractUserClaims', () => {
     it('Returns a payload when successful', async () => {
       // Arrange
-      const mockResult = Result.ok(
-        Mapper.auth.toUserClaims({ Id: '1', Email: 'abc@abc.com' }),
-      );
-
       jest
         .spyOn(jwtService, 'verifyAsync')
-        .mockResolvedValueOnce(mockResult.value);
+        .mockResolvedValueOnce({ Id: user.id, Email: user.email });
 
       // Act
       const result = await service.extractUserClaims('Bearer jwt');
 
       // Assert
       expect(result.isOk).toBe(true);
-      expect(result.value).toMatchObject(mockResult.value);
+      expect(result.value).toMatchObject(user);
     });
     it('Returns correct error when a JsonWebTokenError is thrown', async () => {
       // Arrange
