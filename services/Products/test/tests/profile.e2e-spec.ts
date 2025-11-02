@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   HttpStatus,
   INestApplication,
   NotFoundException,
@@ -10,6 +11,7 @@ import { profiles } from '../seeders/seedProfiles';
 import { ProfileDto } from 'src/profiles/dto/profile.dto';
 import {
   editProfileErrorMessages,
+  getProfileByEmailErrorMessages,
   getProfileErrorMessages,
 } from 'src/profiles/constants/errorMessages';
 import { EditProfileDto } from 'src/profiles/dto/edit-profile.dto';
@@ -18,7 +20,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { InitializeProfileResultDto } from 'src/profiles/dto/initialize-profile-result-dto';
 import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
 import { from, map, switchMap, tap } from 'rxjs';
-import { populateJwtEnvironmentVariables } from '../util/jwt';
+import { generateJwt, populateJwtEnvironmentVariables } from '../util/jwt';
+import { GetByEmailErrors } from 'src/profiles/types/GetByEmailErrors';
 
 describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -84,6 +87,73 @@ describe('ProfilesController (e2e)', () => {
 
       const body = response.body as NotFoundException;
       expect(body.message).toBe(getProfileErrorMessages.doesNotExist);
+    });
+  });
+
+  describe('endpoint "/me" (GET', () => {
+    it("Returns the user's profile when authenticated", async () => {
+      const profile = profiles.find((p) => p.confirmed && !p.deletedAt)!;
+      const jwt = generateJwt(profile.email, '12345');
+
+      const response = await request(app.getHttpServer())
+        .get('/profiles/me')
+        .set('Authorization', `Bearer ${jwt}`);
+
+      expect(response.status).toBe(HttpStatus.OK);
+      const responseBody = response.body as ProfileDto;
+      expect(responseBody.id).toBe(profile.id);
+      expect(responseBody.firstName).toBe(profile.firstName);
+    });
+
+    it('Returns 401 if the user is not authenticated', async () => {
+      const response = await request(app.getHttpServer()).get('/profiles/me');
+
+      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    });
+
+    it('Returns 409 if the profile is not confirmed', async () => {
+      const profile = profiles.find((p) => !p.confirmed && !p.deletedAt)!;
+      const jwt = generateJwt(profile.email, '12345');
+
+      const response = await request(app.getHttpServer())
+        .get('/profiles/me')
+        .set('Authorization', `Bearer ${jwt}`);
+
+      expect(response.status).toBe(HttpStatus.CONFLICT);
+      const responseBody = response.body as ConflictException;
+      expect(responseBody.message).toBe(
+        getProfileByEmailErrorMessages[GetByEmailErrors.NotConfirmed],
+      );
+    });
+
+    it('Returns 404 if the profile is deleted and unconfirmed', async () => {
+      const profile = profiles.find((p) => !p.confirmed && p.deletedAt)!;
+      const jwt = generateJwt(profile.email, '12345');
+
+      const response = await request(app.getHttpServer())
+        .get('/profiles/me')
+        .set('Authorization', `Bearer ${jwt}`);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      const responseBody = response.body as NotFoundException;
+      expect(responseBody.message).toBe(
+        getProfileByEmailErrorMessages[GetByEmailErrors.DoesNotExist],
+      );
+    });
+
+    it('Returns 404 if the profile is deleted and confirmed', async () => {
+      const profile = profiles.find((p) => p.confirmed && p.deletedAt)!;
+      const jwt = generateJwt(profile.email, '12345');
+
+      const response = await request(app.getHttpServer())
+        .get('/profiles/me')
+        .set('Authorization', `Bearer ${jwt}`);
+
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
+      const responseBody = response.body as NotFoundException;
+      expect(responseBody.message).toBe(
+        getProfileByEmailErrorMessages[GetByEmailErrors.DoesNotExist],
+      );
     });
   });
 

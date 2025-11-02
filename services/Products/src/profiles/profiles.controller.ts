@@ -20,6 +20,7 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import {
   createProfileErrorMessages,
   editProfileErrorMessages,
+  getProfileByEmailErrorMessages,
   getProfileErrorMessages,
   profileInitializationErrors,
 } from './constants/errorMessages';
@@ -27,6 +28,10 @@ import { EditErrors } from './types/EditErrors';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { ProfileInitPayload } from './types/profile-init';
 import { CreateErrors } from './types/CreateErrors';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { User } from 'src/auth/decorators/user.decorator';
+import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -34,6 +39,23 @@ export class ProfilesController {
     private readonly profilesService: ProfilesService,
     private readonly clock: ClockService,
   ) {}
+
+  @Auth()
+  @Get('me')
+  public async getMyProfile(@User() user: UserClaimsDto) {
+    const result = await this.profilesService.getByEmail(user.email);
+
+    if (result.isErr) {
+      const errorMessage = getProfileByEmailErrorMessages[result.error];
+      if (result.error === GetByEmailErrors.NotConfirmed) {
+        throw new ConflictException(errorMessage);
+      }
+
+      throw new NotFoundException(errorMessage);
+    }
+
+    return result.value;
+  }
 
   @Get(':id')
   public async getProfileById(

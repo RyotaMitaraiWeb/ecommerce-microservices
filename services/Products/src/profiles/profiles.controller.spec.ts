@@ -26,6 +26,8 @@ import { RpcException } from '@nestjs/microservices';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 import { AuthModule } from 'src/auth/auth.module';
 import { EditProfileDto } from './dto/edit-profile.dto';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
+import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -96,6 +98,71 @@ describe('ProfilesController', () => {
         expect(result).toEqual(profiles);
       },
     );
+  });
+
+  describe('getMyProfile', () => {
+    it('Returns a profile when successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<ProfileDto, GetByEmailErrors>(
+        Mapper.profile.toDto(profile),
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.getMyProfile(claims);
+
+      // Assert
+      expect(result.id).toBe(profile.id);
+      expect(result.firstName).toBe(profile.firstName);
+      expect(result.lastName).toBe(profile.lastName);
+    });
+
+    it('Throws ConflictException when the profile is not confirmed', async () => {
+      // Arrange
+      const mockResult = Result.err<ProfileDto, GetByEmailErrors>(
+        GetByEmailErrors.NotConfirmed,
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.getMyProfile(claims)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('Throws NotFoundException when the profile cannot be found', async () => {
+      // Arrange
+      const mockResult = Result.err<ProfileDto, GetByEmailErrors>(
+        GetByEmailErrors.DoesNotExist,
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.getMyProfile(claims)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 
   describe('handleProfileInit', () => {

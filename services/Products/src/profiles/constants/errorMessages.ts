@@ -1,5 +1,6 @@
 import { CreateErrors } from '../types/CreateErrors';
 import { EditErrors } from '../types/EditErrors';
+import { GetByEmailErrors } from '../types/GetByEmailErrors';
 import { InitializeProfileErrors } from '../types/InitializeProfileErrors';
 
 export const nameErrorMessages = {
@@ -10,6 +11,13 @@ export const nameErrorMessages = {
 export const getProfileErrorMessages = {
   doesNotExist: 'The profile you are looking for does not exist',
 };
+
+export const getProfileByEmailErrorMessages: Record<GetByEmailErrors, string> =
+  {
+    [GetByEmailErrors.DoesNotExist]:
+      'Profile could not be retrieved, it might have been deleted',
+    [GetByEmailErrors.NotConfirmed]: 'You must first confirm your profile.',
+  };
 
 export const createProfileErrorMessages = {
   [CreateErrors.IsConfirmed]:
