@@ -185,6 +185,38 @@ describe('ProfilesController (e2e)', () => {
 
       expect(response.status).toBe(HttpStatus.CONFLICT);
     });
+
+    it('REST endpoint returns 400 if first name is not valid', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = '!Ryota'; // special symbols are not allowed
+      payload.lastName = 'Mitarai';
+
+      const profile = profiles.find(
+        (profile) => !profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .post(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('REST endpoint returns 400 if last name is not valid', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = '!Mitarai'; // special symbols are not allowed
+
+      const profile = profiles.find(
+        (profile) => !profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .post(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
   });
 
   describe('endpoint "/{id}" (PATCH)', () => {
@@ -265,6 +297,38 @@ describe('ProfilesController (e2e)', () => {
       expect(body.message).toBe(
         editProfileErrorMessages[EditErrors.NoAccountWithSuchId],
       );
+    });
+
+    it('Returns 400 if first name is not valid', async () => {
+      const payload = new EditProfileDto();
+      payload.firstName = '!Ryota'; // special symbols are not allowed
+      payload.lastName = 'Mitarai';
+
+      const profile = profiles.find(
+        (profile) => !profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('Returns 400 if last name is not valid', async () => {
+      const payload = new EditProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = '!Mitarai'; // special symbols are not allowed
+
+      const profile = profiles.find(
+        (profile) => !profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles/${profile.id}`)
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     });
   });
 });
