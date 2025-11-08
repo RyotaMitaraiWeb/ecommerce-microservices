@@ -7,11 +7,4 @@
         public required string Pattern { get; set; }
 
     }
-
-    public class RpcPayload
-    {
-        public required string Id { get; set; }
-        public required string Pattern { get; set; }
-
-    }
 }
