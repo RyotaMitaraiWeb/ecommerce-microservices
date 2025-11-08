@@ -25,8 +25,7 @@ import {
   profileInitializationErrors,
 } from './constants/errorMessages';
 import { EditErrors } from './types/EditErrors';
-import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { ProfileInitPayload } from './types/profile-init';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { CreateErrors } from './types/CreateErrors';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/auth/decorators/user.decorator';
@@ -76,8 +75,9 @@ export class ProfilesController {
   }
 
   @MessagePattern('init_profile')
-  public async handleProfileInit(@Payload() data: ProfileInitPayload) {
-    const email = data.email;
+  @Auth()
+  public async handleProfileInit(@User() user: UserClaimsDto) {
+    const email = user.email;
     const result = await this.profilesService.initialize(email);
 
     if (result.isErr) {

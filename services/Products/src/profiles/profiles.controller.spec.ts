@@ -21,7 +21,6 @@ import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
-import { ProfileInitPayload } from './types/profile-init';
 import { RpcException } from '@nestjs/microservices';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 import { AuthModule } from 'src/auth/auth.module';
@@ -173,9 +172,9 @@ describe('ProfilesController', () => {
         InitializeProfileErrors
       >(Mapper.profile.toInitializeResultDto(profile));
 
-      const data: ProfileInitPayload = {
-        email: profile.email,
-      };
+      const data = new UserClaimsDto();
+      data.email = profile.email;
+      data.id = '1';
 
       jest
         .spyOn(profileService, 'initialize')
@@ -196,9 +195,9 @@ describe('ProfilesController', () => {
       'Throws an RPC error if initialization fails for whatever reason',
       async (error) => {
         // Arrange
-        const data: ProfileInitPayload = {
-          email: profile.email,
-        };
+        const data = new UserClaimsDto();
+        data.email = profile.email;
+        data.id = '1';
 
         const mockResult = Result.err<
           InitializeProfileResultDto,

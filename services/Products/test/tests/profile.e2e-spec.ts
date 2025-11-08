@@ -16,7 +16,7 @@ import {
 } from 'src/profiles/constants/errorMessages';
 import { EditProfileDto } from 'src/profiles/dto/edit-profile.dto';
 import { EditErrors } from 'src/profiles/types/EditErrors';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RmqRecordBuilder } from '@nestjs/microservices';
 import { InitializeProfileResultDto } from 'src/profiles/dto/initialize-profile-result-dto';
 import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
 import { from, map, switchMap, tap } from 'rxjs';
@@ -177,8 +177,18 @@ describe('ProfilesController (e2e)', () => {
       payload.firstName = 'Ryota';
       payload.lastName = 'Mitarai';
 
+      const jwt = generateJwt('myvalidemail@gmail.com', '1');
+      const record = new RmqRecordBuilder()
+        .setData(payload)
+        .setOptions({
+          headers: {
+            authorization: `Bearer ${jwt}`,
+          },
+        })
+        .build();
+
       rmqClient
-        .send('init_profile', { email: 'myvalidemail@gmail.com' })
+        .send('init_profile', record)
         .pipe(
           // Assert that initialization has been processed correctly
           tap((data: InitializeProfileResultDto) => {
