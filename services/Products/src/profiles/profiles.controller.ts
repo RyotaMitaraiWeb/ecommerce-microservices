@@ -20,19 +20,17 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import {
   createProfileErrorMessages,
   editProfileErrorMessages,
+  getProfileByEmailErrorMessages,
   getProfileErrorMessages,
   profileInitializationErrors,
 } from './constants/errorMessages';
 import { EditErrors } from './types/EditErrors';
-import {
-  MessagePattern,
-  Payload,
-  RmqContext,
-  RpcException,
-} from '@nestjs/microservices';
-import { ProfileInitPayload } from './types/profile-init';
-import { Channel } from 'amqplib';
+import { MessagePattern, RpcException } from '@nestjs/microservices';
 import { CreateErrors } from './types/CreateErrors';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { User } from 'src/auth/decorators/user.decorator';
+import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -40,6 +38,23 @@ export class ProfilesController {
     private readonly profilesService: ProfilesService,
     private readonly clock: ClockService,
   ) {}
+
+  @Auth()
+  @Get('me')
+  public async getMyProfile(@User() user: UserClaimsDto) {
+    const result = await this.profilesService.getByEmail(user.email);
+
+    if (result.isErr) {
+      const errorMessage = getProfileByEmailErrorMessages[result.error];
+      if (result.error === GetByEmailErrors.NotConfirmed) {
+        throw new ConflictException(errorMessage);
+      }
+
+      throw new NotFoundException(errorMessage);
+    }
+
+    return result.value;
+  }
 
   @Get(':id')
   public async getProfileById(
@@ -60,8 +75,9 @@ export class ProfilesController {
   }
 
   @MessagePattern('init_profile')
-  public async handleProfileInit(@Payload() data: ProfileInitPayload) {
-    const email = data.email;
+  @Auth()
+  public async handleProfileInit(@User() user: UserClaimsDto) {
+    const email = user.email;
     const result = await this.profilesService.initialize(email);
 
     if (result.isErr) {
@@ -71,13 +87,18 @@ export class ProfilesController {
     return result.value;
   }
 
-  @Post(':id')
+  @Post('confirm')
+  @Auth()
   public async createProfile(
-    @Param('id', ParseIntPipe) id: number,
     @Body() details: CreateProfileDto,
+    @User() user: UserClaimsDto,
   ) {
     const today = this.clock.now();
-    const result = await this.profilesService.create(details, id, today);
+    const result = await this.profilesService.create(
+      details,
+      user.email,
+      today,
+    );
 
     if (result.isErr) {
       if (result.error === CreateErrors.IsConfirmed) {
@@ -87,7 +108,7 @@ export class ProfilesController {
       throw new NotFoundException(createProfileErrorMessages[result.error]);
     }
 
-    return { id };
+    return { email: user.email };
   }
 
   @Patch(':id')
@@ -96,6 +117,10 @@ export class ProfilesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() details: EditProfileDto,
   ) {
+    if (details.isEmpty) {
+      return;
+    }
+
     const result = await this.profilesService.edit(details, id);
 
     if (result.isErr) {
@@ -106,8 +131,4 @@ export class ProfilesController {
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
   }
-}
-
-export function getChannel(context: RmqContext): Channel {
-  return context.getChannelRef() as Channel;
 }

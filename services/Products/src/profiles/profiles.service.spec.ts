@@ -19,6 +19,7 @@ import { DeleteErrors } from './types/DeleteErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
 import { pgUniqueConstraintErrorCode } from './constants/errorCodes';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
 
 // Prevent state mutation from polluting our tests;
 const unconfirmedProfileCopy = { ...unconfirmedProfile };
@@ -84,6 +85,46 @@ describe('ProfilesService', () => {
 
       // Act
       const result = await service.getById(1);
+
+      // Assert
+      expect(result.value.firstName).toBe(profile.firstName);
+      expect(result.value.lastName).toBe(profile.lastName);
+      expect(result.value.id).toBe(profile.id);
+      expect(result.value.joinDate).toBe(profile.createdAt);
+    });
+  });
+
+  describe('getByEmail', () => {
+    it('Returns does not exist error if it returns null', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
+
+      // Act
+      const result = await service.getByEmail('a@a.com');
+
+      // Assert
+      expect(result.error).toBe(GetByEmailErrors.DoesNotExist);
+    });
+
+    it('Returns not confirmed error if the profile is not confirmed', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValueOnce(unconfirmedProfile);
+
+      // Act
+      const result = await service.getByEmail(unconfirmedProfile.email);
+
+      // Assert
+      expect(result.error).toBe(GetByEmailErrors.NotConfirmed);
+    });
+
+    it('Returns a profile if one is found', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
+
+      // Act
+      const result = await service.getByEmail(profile.email);
 
       // Assert
       expect(result.value.firstName).toBe(profile.firstName);
@@ -199,7 +240,11 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.create(createProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.error).toBe(CreateErrors.NoAccountWithSuchId);
@@ -210,7 +255,11 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
 
       // Act
-      const result = await service.create(editProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.error).toBe(CreateErrors.IsConfirmed);
@@ -223,7 +272,11 @@ describe('ProfilesService', () => {
         .mockResolvedValueOnce(provideUnconfirmedProfile());
 
       // Act
-      const result = await service.create(createProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.isOk).toBe(true);

@@ -13,7 +13,7 @@ namespace ProductsApi.Services
     public class ProductApiService(IConfiguration config, IChannelService channelService, IRetryProfileInit retry) : IProductApiService
     {
         private readonly string queue = config["RABBITMQ_INIT_PROFILE_QUEUE"] ?? throw new NullReferenceException(nameof(queue));
-        public async Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(InitializeProfilePayloadDto payload)
+        public async Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(string jwt)
         {
             AsyncRetryPolicy retryPolicy = retry.Policy;
 
@@ -22,15 +22,15 @@ namespace ProductsApi.Services
                 NestRpcResponse<InitializeProfileResultDto> result = await retryPolicy.ExecuteAsync(async () =>
                 {
                     return await channelService
-                        .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
-                            payload: payload,
+                        .PublishRpcMessage<NestRpcResponse<InitializeProfileResultDto>>(
                             pattern: Patterns.InitializeProfile,
-                            queue: queue);
+                            queue: queue,
+                            jwt: jwt);
                 });
 
                 return result.Response!;
             }
-            catch (Exception ex)
+            catch
             {
                 return InitializeProfileErrors.ServerError;
             }

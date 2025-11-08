@@ -4,10 +4,11 @@ import { ProfilesController } from './profiles.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Profile } from './entities/profile.entity';
 import { ClockModule } from 'src/clock/clock.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   controllers: [ProfilesController],
   providers: [ProfilesService],
-  imports: [TypeOrmModule.forFeature([Profile]), ClockModule],
+  imports: [TypeOrmModule.forFeature([Profile]), ClockModule, AuthModule],
 })
 export class ProfilesModule {}

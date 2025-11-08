@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ProfilesModule } from './profiles/profiles.module';
 import { ClockModule } from './clock/clock.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ClockModule } from './clock/clock.module';
     }),
     ProfilesModule,
     ClockModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

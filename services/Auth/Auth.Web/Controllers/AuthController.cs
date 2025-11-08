@@ -44,17 +44,13 @@ namespace Auth.Web.Controllers
                 return Unauthorized();
             }
 
-            InitializeProfilePayloadDto profileData = new()
-            {
-                Email = register.Email,
-            };
+            AuthPayloadDto payload = await CreateAuthPayload(result);
 
 
-            var productsProfileResult = await productApiService.InitializeProfile(profileData);
+            var productsProfileResult = await productApiService.InitializeProfile(payload.Token);
 
             if (productsProfileResult.Value is InitializeProfileResultDto)
             {
-                AuthPayloadDto payload = await CreateAuthPayload(result);
                 // returning an empty string for location for now, as the API isn't exposing
                 // a details endpoint for users
                 return Created(string.Empty, payload);

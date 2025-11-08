@@ -48,6 +48,9 @@ services:
       - POSTGRES_DB=products
       - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
       - RABBITMQ_PROFILE_INIT_QUEUE=profile_init
+      - PRODUCTS_JWT_SECRET=oknNKJNjknjkqnkjwnjkn3kjn23kjn23kjnklAlakmn
+      - PRODUCTS_JWT_ISSUER=http://localhost:5000
+      - PRODUCTS_JWT_AUDIENCE=ecommerceMicroservices
     depends_on:
       products_db:
         condition: service_healthy

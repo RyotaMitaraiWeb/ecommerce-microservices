@@ -6,6 +6,6 @@ namespace ProductsApi.Services.Contracts
 {
     public interface IProductApiService
     {
-        Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(InitializeProfilePayloadDto payload);
+        Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(string jwt);
     }
 }

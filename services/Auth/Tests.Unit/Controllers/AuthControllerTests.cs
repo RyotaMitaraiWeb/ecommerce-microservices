@@ -6,7 +6,6 @@ using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using ProductsApi.Dto;
 using ProductsApi.Enums;
 using ProductsApi.Services.Contracts;
@@ -162,7 +161,7 @@ namespace Tests.Unit.Controllers
                 .ReturnsForAnyArgs(createdToken);
 
             ProductsApi
-                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email))
+                .InitializeProfile(createdToken.Token)
                 .Returns(initializedProfile);
 
             // Act
@@ -179,7 +178,7 @@ namespace Tests.Unit.Controllers
         }
 
         [Test]
-        public async Task Register_ReturnsInteralServerErrorWhenInitializationFailsThenDoesNotGenerateJwtAndDeletesTheProfile()
+        public async Task Register_ReturnsInteralServerErrorWhenInitializationFailsAndDeletesTheProfile()
         {
             // Arrange
             var register = new RegisterDto()
@@ -196,17 +195,27 @@ namespace Tests.Unit.Controllers
 
             string token = "a";
 
+            var claims = new UserClaimsDto()
+            {
+                Email = successfulAuth.Email,
+                Id = successfulAuth.Id,
+            };
+
             var createdToken = new CreatedJwtDto()
             {
                 Token = token,
             };
+
+            JwtService
+                .CreateTokenAsync(claims)
+                .ReturnsForAnyArgs(createdToken);
 
             UserService
                 .CreateUser(register)
                 .Returns(successfulAuth);
 
             ProductsApi
-                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email))
+                .InitializeProfile(createdToken.Token)
                 .Returns(InitializeProfileErrors.ServerError);
 
             // Act
@@ -217,7 +226,6 @@ namespace Tests.Unit.Controllers
             Assert.That(response?.StatusCode, Is.EqualTo(500));
 
             await UserService.Received(1).DeleteUser(successfulAuth.Id);
-            await JwtService.DidNotReceiveWithAnyArgs().CreateTokenAsync(Arg.Any<UserClaimsDto>());
         }
 
         [Test]

@@ -21,9 +21,12 @@ import { ClockModule } from 'src/clock/clock.module';
 import { EditErrors } from './types/EditErrors';
 import { Mapper } from 'src/common/mapper/Mapper';
 import { InitializeProfileResultDto } from './dto/initialize-profile-result-dto';
-import { ProfileInitPayload } from './types/profile-init';
 import { RpcException } from '@nestjs/microservices';
 import { InitializeProfileErrors } from './types/InitializeProfileErrors';
+import { AuthModule } from 'src/auth/auth.module';
+import { EditProfileDto } from './dto/edit-profile.dto';
+import { GetByEmailErrors } from './types/GetByEmailErrors';
+import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -34,7 +37,7 @@ describe('ProfilesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProfilesController],
       providers: [ProfilesService, profileRepositoryStub],
-      imports: [ClockModule],
+      imports: [ClockModule, AuthModule],
     }).compile();
 
     controller = module.get<ProfilesController>(ProfilesController);
@@ -96,6 +99,71 @@ describe('ProfilesController', () => {
     );
   });
 
+  describe('getMyProfile', () => {
+    it('Returns a profile when successful', async () => {
+      // Arrange
+      const mockResult = Result.ok<ProfileDto, GetByEmailErrors>(
+        Mapper.profile.toDto(profile),
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.getMyProfile(claims);
+
+      // Assert
+      expect(result.id).toBe(profile.id);
+      expect(result.firstName).toBe(profile.firstName);
+      expect(result.lastName).toBe(profile.lastName);
+    });
+
+    it('Throws ConflictException when the profile is not confirmed', async () => {
+      // Arrange
+      const mockResult = Result.err<ProfileDto, GetByEmailErrors>(
+        GetByEmailErrors.NotConfirmed,
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.getMyProfile(claims)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('Throws NotFoundException when the profile cannot be found', async () => {
+      // Arrange
+      const mockResult = Result.err<ProfileDto, GetByEmailErrors>(
+        GetByEmailErrors.DoesNotExist,
+      );
+
+      const claims = new UserClaimsDto();
+      claims.id = '1';
+      claims.email = profile.email;
+
+      jest
+        .spyOn(profileService, 'getByEmail')
+        .mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.getMyProfile(claims)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe('handleProfileInit', () => {
     it('Returns a DTO when successful', async () => {
       // Arrange
@@ -104,9 +172,9 @@ describe('ProfilesController', () => {
         InitializeProfileErrors
       >(Mapper.profile.toInitializeResultDto(profile));
 
-      const data: ProfileInitPayload = {
-        email: profile.email,
-      };
+      const data = new UserClaimsDto();
+      data.email = profile.email;
+      data.id = '1';
 
       jest
         .spyOn(profileService, 'initialize')
@@ -127,9 +195,9 @@ describe('ProfilesController', () => {
       'Throws an RPC error if initialization fails for whatever reason',
       async (error) => {
         // Arrange
-        const data: ProfileInitPayload = {
-          email: profile.email,
-        };
+        const data = new UserClaimsDto();
+        data.email = profile.email;
+        data.id = '1';
 
         const mockResult = Result.err<
           InitializeProfileResultDto,
@@ -157,11 +225,15 @@ describe('ProfilesController', () => {
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       // Act
-      const result = await controller.createProfile(1, createProfileBody);
+      const result = await controller.createProfile(createProfileBody, claims);
 
       // Assert
-      expect(result.id).toBe(1);
+      expect(result.email).toBe(profile.email);
     });
 
     it('Throws a 404 error if the service returns NoAcccountWithSuch error', async () => {
@@ -169,12 +241,16 @@ describe('ProfilesController', () => {
       const mockResult = Result.err(CreateErrors.NoAccountWithSuchId);
       const mockDate = new Date('01/01/2020');
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
       // Act & Assert
       await expect(() =>
-        controller.createProfile(1, createProfileBody),
+        controller.createProfile(createProfileBody, claims),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -186,9 +262,13 @@ describe('ProfilesController', () => {
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       // Act & Assert
       await expect(() =>
-        controller.createProfile(1, createProfileBody),
+        controller.createProfile(createProfileBody, claims),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -205,6 +285,24 @@ describe('ProfilesController', () => {
       // Assert
       expect(result).toBeUndefined();
     });
+
+    it.each([{}, { firstName: '', lastName: undefined }, { lastName: null }])(
+      'Handles correctly the cases where no viable request body is provided',
+      async (requestBody: object) => {
+        // Arrange
+        const dto = new EditProfileDto();
+        Object.assign(dto, requestBody);
+
+        const spy = jest.spyOn(profileService, 'edit');
+
+        // Act
+        const result = await controller.editProfile(1, dto);
+
+        // Assert
+        expect(result).toBeUndefined();
+        expect(spy).not.toHaveBeenCalled();
+      },
+    );
 
     it.each([
       [EditErrors.IsNotConfirmed, ForbiddenException],
