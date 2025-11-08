@@ -87,13 +87,18 @@ export class ProfilesController {
     return result.value;
   }
 
-  @Post(':id')
+  @Post('confirm')
+  @Auth()
   public async createProfile(
-    @Param('id', ParseIntPipe) id: number,
     @Body() details: CreateProfileDto,
+    @User() user: UserClaimsDto,
   ) {
     const today = this.clock.now();
-    const result = await this.profilesService.create(details, id, today);
+    const result = await this.profilesService.create(
+      details,
+      user.email,
+      today,
+    );
 
     if (result.isErr) {
       if (result.error === CreateErrors.IsConfirmed) {
@@ -103,7 +108,7 @@ export class ProfilesController {
       throw new NotFoundException(createProfileErrorMessages[result.error]);
     }
 
-    return { id };
+    return { email: user.email };
   }
 
   @Patch(':id')

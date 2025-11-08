@@ -240,7 +240,11 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.create(createProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.error).toBe(CreateErrors.NoAccountWithSuchId);
@@ -251,7 +255,11 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
 
       // Act
-      const result = await service.create(createProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.error).toBe(CreateErrors.IsConfirmed);
@@ -264,7 +272,11 @@ describe('ProfilesService', () => {
         .mockResolvedValueOnce(provideUnconfirmedProfile());
 
       // Act
-      const result = await service.create(createProfileBody, 1, today);
+      const result = await service.create(
+        createProfileBody,
+        profile.email,
+        today,
+      );
 
       // Assert
       expect(result.isOk).toBe(true);

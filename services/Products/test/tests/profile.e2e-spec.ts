@@ -19,7 +19,7 @@ import { EditErrors } from 'src/profiles/types/EditErrors';
 import { ClientProxy, RmqRecordBuilder } from '@nestjs/microservices';
 import { InitializeProfileResultDto } from 'src/profiles/dto/initialize-profile-result-dto';
 import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
-import { from, map, switchMap, tap } from 'rxjs';
+import { from, switchMap, tap } from 'rxjs';
 import { generateJwt, populateJwtEnvironmentVariables } from '../util/jwt';
 import { GetByEmailErrors } from 'src/profiles/types/GetByEmailErrors';
 
@@ -195,10 +195,11 @@ describe('ProfilesController (e2e)', () => {
             expect(data.email).toBe('myvalidemail@gmail.com');
           }),
           // Sending a POST request to finalize the profile
-          switchMap((data) =>
+          switchMap(() =>
             from(
               request(app.getHttpServer())
-                .post(`/profiles/${data.id}`)
+                .post(`/profiles/confirm`)
+                .set('Authorization', `Bearer ${jwt}`)
                 .send(payload),
             ),
           ),
@@ -207,12 +208,12 @@ describe('ProfilesController (e2e)', () => {
             expect(response.status).toBe(HttpStatus.CREATED);
           }),
           // Check if the profile has been edited successfully
-          map((response) => {
-            const body = response.body as { id: number };
-            return body.id;
-          }),
-          switchMap((id) =>
-            from(request(app.getHttpServer()).get(`/profiles/${id}`)),
+          switchMap(() =>
+            from(
+              request(app.getHttpServer())
+                .get(`/profiles/me`)
+                .set('Authorization', `Bearer ${jwt}`),
+            ),
           ),
         )
         .subscribe((response) => {
@@ -229,8 +230,11 @@ describe('ProfilesController (e2e)', () => {
       payload.firstName = 'Ryota';
       payload.lastName = 'Mitarai';
 
+      const jwt = generateJwt('nonExistantEmail122345634@gmail.com', '1');
+
       const response = await request(app.getHttpServer())
-        .post('/profiles/150000')
+        .post('/profiles/confirm')
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -241,10 +245,15 @@ describe('ProfilesController (e2e)', () => {
       payload.firstName = 'Ryota';
       payload.lastName = 'Mitarai';
 
-      const profile = profiles.find((profile) => profile.deletedAt)!;
+      const profile = profiles.find(
+        (profile) => !profile.confirmed && profile.deletedAt,
+      )!;
+
+      const jwt = generateJwt(profile.email, '1');
 
       const response = await request(app.getHttpServer())
-        .post(`/profiles/${profile.id}`)
+        .post(`/profiles/confirm`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -259,8 +268,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .post(`/profiles/${profile.id}`)
+        .post(`/profiles/confirm`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.CONFLICT);
@@ -275,8 +287,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .post(`/profiles/${profile.id}`)
+        .post(`/profiles/confirm`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);
@@ -291,8 +306,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .post(`/profiles/${profile.id}`)
+        .post(`/profiles/confirm`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);

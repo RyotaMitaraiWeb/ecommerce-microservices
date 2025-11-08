@@ -86,10 +86,10 @@ export class ProfilesService {
 
   async create(
     details: CreateProfileDto,
-    id: number,
+    email: string,
     today: Date,
   ): Promise<Result<unknown, CreateErrors>> {
-    const profile = await this.repository.findOneBy({ id });
+    const profile = await this.repository.findOneBy({ email });
     if (!profile) {
       return Result.err(CreateErrors.NoAccountWithSuchId);
     }

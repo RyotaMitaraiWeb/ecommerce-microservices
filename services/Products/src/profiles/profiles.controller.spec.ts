@@ -225,11 +225,15 @@ describe('ProfilesController', () => {
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       // Act
-      const result = await controller.createProfile(1, createProfileBody);
+      const result = await controller.createProfile(createProfileBody, claims);
 
       // Assert
-      expect(result.id).toBe(1);
+      expect(result.email).toBe(profile.email);
     });
 
     it('Throws a 404 error if the service returns NoAcccountWithSuch error', async () => {
@@ -237,12 +241,16 @@ describe('ProfilesController', () => {
       const mockResult = Result.err(CreateErrors.NoAccountWithSuchId);
       const mockDate = new Date('01/01/2020');
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
       // Act & Assert
       await expect(() =>
-        controller.createProfile(1, createProfileBody),
+        controller.createProfile(createProfileBody, claims),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -254,9 +262,13 @@ describe('ProfilesController', () => {
       jest.spyOn(clock, 'now').mockReturnValueOnce(mockDate);
       jest.spyOn(profileService, 'create').mockResolvedValueOnce(mockResult);
 
+      const claims = new UserClaimsDto();
+      claims.email = profile.email;
+      claims.id = '1';
+
       // Act & Assert
       await expect(() =>
-        controller.createProfile(1, createProfileBody),
+        controller.createProfile(createProfileBody, claims),
       ).rejects.toThrow(ConflictException);
     });
   });
