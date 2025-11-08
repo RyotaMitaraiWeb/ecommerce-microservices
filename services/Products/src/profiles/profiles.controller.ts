@@ -111,17 +111,18 @@ export class ProfilesController {
     return { email: user.email };
   }
 
-  @Patch(':id')
+  @Patch()
+  @Auth()
   @HttpCode(HttpStatus.NO_CONTENT)
   public async editProfile(
-    @Param('id', ParseIntPipe) id: number,
+    @User() user: UserClaimsDto,
     @Body() details: EditProfileDto,
   ) {
     if (details.isEmpty) {
       return;
     }
 
-    const result = await this.profilesService.edit(details, id);
+    const result = await this.profilesService.edit(details, user.email);
 
     if (result.isErr) {
       if (result.error === EditErrors.IsNotConfirmed) {

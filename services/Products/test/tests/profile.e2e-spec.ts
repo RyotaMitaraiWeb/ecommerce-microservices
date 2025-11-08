@@ -317,17 +317,20 @@ describe('ProfilesController (e2e)', () => {
     });
   });
 
-  describe('endpoint "/{id}" (PATCH)', () => {
+  describe('endpoint "/" (PATCH)', () => {
     it('Edits a profile successfully', async () => {
       const profile = profiles.find(
         (profile) => profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const requestBody = new EditProfileDto();
       requestBody.firstName = 'Ryota';
 
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -346,8 +349,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send({});
 
       expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -368,8 +374,10 @@ describe('ProfilesController (e2e)', () => {
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
+      const jwt = generateJwt(profile.email, '1');
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.FORBIDDEN);
@@ -383,12 +391,15 @@ describe('ProfilesController (e2e)', () => {
     it('Returns 404 if the profile is deleted', async () => {
       const profile = profiles.find((profile) => !!profile.deletedAt)!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const requestBody = new EditProfileDto();
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -404,8 +415,11 @@ describe('ProfilesController (e2e)', () => {
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
+      const jwt = generateJwt('myawesomeemail@test.com', '1');
+
       const response = await request(app.getHttpServer())
-        .patch('/profiles/15555')
+        .patch('/profiles')
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -424,8 +438,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);
@@ -439,8 +456,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);

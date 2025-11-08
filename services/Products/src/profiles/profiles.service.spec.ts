@@ -289,7 +289,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.edit(editProfileBody, 1);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.error).toBe(EditErrors.NoAccountWithSuchId);
@@ -300,7 +300,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValue(unconfirmedProfile);
 
       // Act
-      const result = await service.edit(editProfileBody, 15);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.error).toBe(EditErrors.IsNotConfirmed);
@@ -313,7 +313,7 @@ describe('ProfilesService', () => {
         .mockResolvedValueOnce(provideConfirmedProfile());
 
       // Act
-      const result = await service.edit(editProfileBody, 1);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.isOk).toBe(true);

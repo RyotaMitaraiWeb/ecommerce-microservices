@@ -110,9 +110,9 @@ export class ProfilesService {
 
   async edit(
     details: EditProfileDto,
-    id: number,
+    email: string,
   ): Promise<Result<unknown, EditErrors>> {
-    const profile = await this.repository.findOneBy({ id });
+    const profile = await this.repository.findOneBy({ email });
     if (!profile) {
       return Result.err(EditErrors.NoAccountWithSuchId);
     }

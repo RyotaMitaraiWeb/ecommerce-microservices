@@ -277,10 +277,13 @@ describe('ProfilesController', () => {
     it('Returns undefined if successful', async () => {
       // Arrange
       const mockResult = Result.ok<unknown, EditErrors>(undefined);
+      const user = new UserClaimsDto();
+      user.email = 'test@abc.com';
+      user.id = '1';
       jest.spyOn(profileService, 'edit').mockResolvedValueOnce(mockResult);
 
       // Act
-      const result = await controller.editProfile(1, editProfileBody);
+      const result = await controller.editProfile(user, editProfileBody);
 
       // Assert
       expect(result).toBeUndefined();
@@ -294,9 +297,12 @@ describe('ProfilesController', () => {
         Object.assign(dto, requestBody);
 
         const spy = jest.spyOn(profileService, 'edit');
+        const user = new UserClaimsDto();
+        user.email = 'test@abc.com';
+        user.id = '1';
 
         // Act
-        const result = await controller.editProfile(1, dto);
+        const result = await controller.editProfile(user, dto);
 
         // Assert
         expect(result).toBeUndefined();
@@ -314,10 +320,13 @@ describe('ProfilesController', () => {
         const mockResult = Result.err(error);
 
         jest.spyOn(profileService, 'edit').mockResolvedValueOnce(mockResult);
+        const user = new UserClaimsDto();
+        user.email = 'test@abc.com';
+        user.id = '1';
 
         // Act & Assert
         await expect(() =>
-          controller.editProfile(1, editProfileBody),
+          controller.editProfile(user, editProfileBody),
         ).rejects.toThrow(exception);
       },
     );
