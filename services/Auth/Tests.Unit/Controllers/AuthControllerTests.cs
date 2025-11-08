@@ -6,11 +6,9 @@ using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using ProductsApi.Dto;
 using ProductsApi.Enums;
 using ProductsApi.Services.Contracts;
-using System.Security.Claims;
 
 namespace Tests.Unit.Controllers
 {
@@ -163,7 +161,7 @@ namespace Tests.Unit.Controllers
                 .ReturnsForAnyArgs(createdToken);
 
             ProductsApi
-                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email), createdToken.Token)
+                .InitializeProfile(createdToken.Token)
                 .Returns(initializedProfile);
 
             // Act
@@ -217,7 +215,7 @@ namespace Tests.Unit.Controllers
                 .Returns(successfulAuth);
 
             ProductsApi
-                .InitializeProfile(Arg.Is<InitializeProfilePayloadDto>(p => p.Email == successfulAuth.Email), createdToken.Token)
+                .InitializeProfile(createdToken.Token)
                 .Returns(InitializeProfileErrors.ServerError);
 
             // Act

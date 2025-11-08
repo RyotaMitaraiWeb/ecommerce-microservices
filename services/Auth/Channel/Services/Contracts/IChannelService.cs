@@ -11,5 +11,10 @@ namespace Channel.Services.Contracts
             string queue,
             string jwt,
             TimeSpan? timeout = null);
+        Task<TResponse> PublishRpcMessage<TResponse>(
+            string pattern,
+            string queue,
+            string jwt,
+            TimeSpan? timeout = null);
     }
 }

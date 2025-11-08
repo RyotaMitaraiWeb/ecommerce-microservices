@@ -52,15 +52,14 @@ namespace Tests.Unit.Services
             };
 
             ChannelService
-                .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
-                    Arg.Is<InitializeProfilePayloadDto>(p => p.Email == email),
+                .PublishRpcMessage<NestRpcResponse<InitializeProfileResultDto>>(
                     ProductsApi.Constants.Patterns.InitializeProfile,
                     Queue,
                     "jwt")
                 .Returns(rpcResponse);
 
             // Act
-            var result = await ProductApiService.InitializeProfile(payload, "jwt");
+            var result = await ProductApiService.InitializeProfile("jwt");
             var response = result.AsT0;
 
             // Assert
@@ -73,7 +72,6 @@ namespace Tests.Unit.Services
         {
             // Arrange
             string email = "abc@abc.com";
-            int id = 1;
 
             var payload = new InitializeProfilePayloadDto()
             {
@@ -81,15 +79,14 @@ namespace Tests.Unit.Services
             };
 
             ChannelService
-                .PublishRpcMessage<InitializeProfilePayloadDto, NestRpcResponse<InitializeProfileResultDto>>(
-                    Arg.Is<InitializeProfilePayloadDto>(p => p.Email == email),
+                .PublishRpcMessage<NestRpcResponse<InitializeProfileResultDto>>(
                     ProductsApi.Constants.Patterns.InitializeProfile,
                     Queue,
                     "jwt")
                 .ThrowsAsync(new Exception());
 
             // Act
-            var result = await ProductApiService.InitializeProfile(payload, "jwt");
+            var result = await ProductApiService.InitializeProfile("jwt");
             var response = result.AsT1;
 
             // Assert

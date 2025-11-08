@@ -44,15 +44,10 @@ namespace Auth.Web.Controllers
                 return Unauthorized();
             }
 
-            InitializeProfilePayloadDto profileData = new()
-            {
-                Email = register.Email,
-            };
-
             AuthPayloadDto payload = await CreateAuthPayload(result);
 
 
-            var productsProfileResult = await productApiService.InitializeProfile(profileData, payload.Token);
+            var productsProfileResult = await productApiService.InitializeProfile(payload.Token);
 
             if (productsProfileResult.Value is InitializeProfileResultDto)
             {
