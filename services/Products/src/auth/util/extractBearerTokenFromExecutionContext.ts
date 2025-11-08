@@ -30,7 +30,7 @@ function extractBearerTokenFromRpcRequest(context: ExecutionContext) {
 
   const headers = message.properties.headers;
 
-  if (headers && Object.values(headers).length) {
+  if (headers && Object.keys(headers).length) {
     const bearerToken = headers?.authorization as string | undefined | null;
     return bearerToken;
   }
