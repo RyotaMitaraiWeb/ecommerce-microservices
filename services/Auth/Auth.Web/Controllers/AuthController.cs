@@ -1,5 +1,6 @@
 ﻿using Auth.Dto;
 using Auth.Services.Contracts;
+using Jwt.Constants;
 using Jwt.Dto;
 using Jwt.Services.Contracts;
 using Jwt.Util;
@@ -7,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductsApi.Dto;
 using ProductsApi.Services.Contracts;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace Auth.Web.Controllers
 {
@@ -72,6 +75,19 @@ namespace Auth.Web.Controllers
             };
 
             return Created(string.Empty, payload);
+        }
+
+        [Authorize]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser([FromHeader(Name = "Authorization")] string? token)
+        {
+            var claims = await jwtService.ReadTokenAsync(token);
+            string id = claims.Id;
+
+            await userService.DeleteUser(id);
+            await productApiService.DeleteProfile(token!);
+
+            return NoContent();
         }
 
         private static UserClaimsDto CreateClaims(SuccessfulAuthenticationDto data)
