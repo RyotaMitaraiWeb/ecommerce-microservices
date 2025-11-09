@@ -134,11 +134,13 @@ export class ProfilesService {
     return Result.ok(undefined);
   }
 
-  async delete(id: number): Promise<Result<unknown, DeleteErrors>> {
-    const profile = await this.repository.findOneBy({ id });
+  async delete(email: string): Promise<Result<unknown, DeleteErrors>> {
+    const profile = await this.repository.findOneBy({ email });
     if (!profile) {
       return Result.err(DeleteErrors.DoesNotExist);
     }
+
+    await this.repository.softDelete({ id: profile.id });
 
     return Result.ok(undefined);
   }

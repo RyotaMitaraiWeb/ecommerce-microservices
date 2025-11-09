@@ -326,7 +326,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.delete(1);
+      const result = await service.delete('email@test.com');
 
       // Assert
       expect(result.error).toBe(DeleteErrors.DoesNotExist);
@@ -337,7 +337,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
 
       // Act
-      const result = await service.delete(1);
+      const result = await service.delete('email@test.com');
 
       // Assert
       expect(result.value).toBeUndefined();
