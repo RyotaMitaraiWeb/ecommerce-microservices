@@ -27,6 +27,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { GetByEmailErrors } from './types/GetByEmailErrors';
 import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
+import { DeleteErrors } from './types/DeleteErrors';
 
 describe('ProfilesController', () => {
   let controller: ProfilesController;
@@ -330,5 +331,40 @@ describe('ProfilesController', () => {
         ).rejects.toThrow(exception);
       },
     );
+  });
+
+  describe('deleteProfile', () => {
+    it('Returns an object containing the email when successful', async () => {
+      // Arrange
+      const user = new UserClaimsDto();
+      user.email = 'test@abc.com';
+      user.id = '1';
+
+      const mockResult = Result.ok<undefined, DeleteErrors>(undefined);
+
+      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
+
+      // Act
+      const result = await controller.deleteProfile(user);
+
+      // Assert
+      expect(result.email).toBe('test@abc.com');
+    });
+
+    it('Throws correct error when the profile does not exist', async () => {
+      // Arrange
+      const user = new UserClaimsDto();
+      user.email = 'test@abc.com';
+      user.id = '1';
+
+      const mockResult = Result.err(DeleteErrors.DoesNotExist);
+
+      jest.spyOn(profileService, 'delete').mockResolvedValueOnce(mockResult);
+
+      // Act & Assert
+      await expect(() => controller.deleteProfile(user)).rejects.toThrow(
+        RpcException,
+      );
+    });
   });
 });

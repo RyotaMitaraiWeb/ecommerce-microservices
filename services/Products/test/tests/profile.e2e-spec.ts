@@ -509,4 +509,50 @@ describe('ProfilesController (e2e)', () => {
       expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
     });
   });
+
+  describe('Deleting a profile (pattern "delete_profile")', () => {
+    it('Deletes a profile successfully', (done) => {
+      const profile = profiles.find(
+        (profile) => profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const jwt = generateJwt(profile.email, '1');
+
+      const record = new RmqRecordBuilder().setData({}).setOptions({
+        headers: {
+          authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      rmqClient
+        .send('delete_profile', record)
+        .pipe(
+          tap((response: { email: string }) =>
+            expect(response.email).toBe(profile.email),
+          ),
+          switchMap(() =>
+            from(
+              request(app.getHttpServer())
+                .get(`/profiles/${profile.id}`)
+                .send(),
+            ),
+          ),
+        )
+        .subscribe({
+          next: (response) => {
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+            const exception = response.body as NotFoundException;
+            expect(exception.message).toBe(
+              getProfileErrorMessages.doesNotExist,
+            );
+
+            done();
+          },
+          error: (err) => {
+            console.error(err);
+            done.fail();
+          },
+        });
+    });
+  });
 });

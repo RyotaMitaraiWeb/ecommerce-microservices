@@ -19,6 +19,7 @@ import { CreateProfileDto } from './dto/create-profile.dto';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import {
   createProfileErrorMessages,
+  deleteProfileErrors,
   editProfileErrorMessages,
   getProfileByEmailErrorMessages,
   getProfileErrorMessages,
@@ -31,6 +32,7 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { User } from 'src/auth/decorators/user.decorator';
 import { UserClaimsDto } from 'src/auth/dto/user-claims.dto';
 import { GetByEmailErrors } from './types/GetByEmailErrors';
+import { UnauthorizedRpcErrorResponse } from 'src/common/rpc/errors/UnauthorizedRpcErrorResponse';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -131,5 +133,20 @@ export class ProfilesController {
 
       throw new NotFoundException(editProfileErrorMessages[result.error]);
     }
+  }
+
+  @MessagePattern('delete_profile')
+  @Auth()
+  public async deleteProfile(@User() user: UserClaimsDto) {
+    const email = user.email;
+    const result = await this.profilesService.delete(email);
+
+    if (result.isErr) {
+      throw new RpcException(
+        new UnauthorizedRpcErrorResponse(deleteProfileErrors[result.error]),
+      );
+    }
+
+    return { email };
   }
 }
