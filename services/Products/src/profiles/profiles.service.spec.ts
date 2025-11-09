@@ -289,7 +289,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.edit(editProfileBody, 1);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.error).toBe(EditErrors.NoAccountWithSuchId);
@@ -300,7 +300,7 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValue(unconfirmedProfile);
 
       // Act
-      const result = await service.edit(editProfileBody, 15);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.error).toBe(EditErrors.IsNotConfirmed);
@@ -313,7 +313,7 @@ describe('ProfilesService', () => {
         .mockResolvedValueOnce(provideConfirmedProfile());
 
       // Act
-      const result = await service.edit(editProfileBody, 1);
+      const result = await service.edit(editProfileBody, 'email@test.com');
 
       // Assert
       expect(result.isOk).toBe(true);
@@ -326,18 +326,31 @@ describe('ProfilesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.delete(1);
+      const result = await service.delete('email@test.com');
 
       // Assert
       expect(result.error).toBe(DeleteErrors.DoesNotExist);
     });
 
-    it('Returns success if a profile is deleted', async () => {
+    it('Returns success if a profile is deleted (confirmed profile)', async () => {
       // Arrange
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(profile);
 
       // Act
-      const result = await service.delete(1);
+      const result = await service.delete('email@test.com');
+
+      // Assert
+      expect(result.value).toBeUndefined();
+    });
+
+    it('Returns success if a profile is deleted (unconfirmed profile)', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValueOnce(unconfirmedProfile);
+
+      // Act
+      const result = await service.delete('email@test.com');
 
       // Assert
       expect(result.value).toBeUndefined();

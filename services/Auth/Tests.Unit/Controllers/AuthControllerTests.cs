@@ -252,5 +252,29 @@ namespace Tests.Unit.Controllers
             Assert.That(value?.Token, Is.EqualTo(token));
             Assert.That(value.User.Email, Is.EqualTo(claims.Email));
         }
+
+        [Test]
+        public async Task DeleteUserReturnsNoContentWhenSuccessful()
+        {
+            // Arrange
+            string token = "a";
+            var claims = new UserClaimsDto()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = "test@abc.com",
+            };
+
+            string userId = claims.Id.ToString();
+
+            JwtService.ReadTokenAsync(token).Returns(claims);
+            UserService.DeleteUser(userId).Returns(Task.CompletedTask);
+            ProductsApi.DeleteProfile(token).Returns(new DeletedProfileResultDto() { Email = claims.Email });
+
+            // Act
+            var result = await Controller.DeleteUser(token);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<NoContentResult>());
+        }
     }
 }

@@ -10,7 +10,10 @@ using ProductsApi.Services.Contracts;
 
 namespace ProductsApi.Services
 {
-    public class ProductApiService(IConfiguration config, IChannelService channelService, IRetryProfileInit retry) : IProductApiService
+    public class ProductApiService(
+        IConfiguration config, 
+        IChannelService channelService, 
+        IRetryProfileInit retry) : IProductApiService
     {
         private readonly string queue = config["RABBITMQ_INIT_PROFILE_QUEUE"] ?? throw new NullReferenceException(nameof(queue));
         public async Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(string jwt)
@@ -34,6 +37,16 @@ namespace ProductsApi.Services
             {
                 return InitializeProfileErrors.ServerError;
             }
+        }
+
+        public async Task<DeletedProfileResultDto> DeleteProfile(string jwt)
+        {
+            NestRpcResponse<DeletedProfileResultDto> response = await channelService.PublishRpcMessage<NestRpcResponse<DeletedProfileResultDto>>(
+                pattern: Patterns.DeleteProfile,
+                queue: queue,
+                jwt: jwt);
+
+            return response.Response!;
         }
     }
 }

@@ -22,6 +22,7 @@ import { CreateProfileDto } from 'src/profiles/dto/create-profile.dto';
 import { from, switchMap, tap } from 'rxjs';
 import { generateJwt, populateJwtEnvironmentVariables } from '../util/jwt';
 import { GetByEmailErrors } from 'src/profiles/types/GetByEmailErrors';
+import { UnauthorizedRpcErrorResponse } from 'src/common/rpc/errors/UnauthorizedRpcErrorResponse';
 
 describe('ProfilesController (e2e)', () => {
   let app: INestApplication<App>;
@@ -90,7 +91,7 @@ describe('ProfilesController (e2e)', () => {
     });
   });
 
-  describe('endpoint "/me" (GET', () => {
+  describe('endpoint "/me" (GET)', () => {
     it("Returns the user's profile when authenticated", async () => {
       const profile = profiles.find((p) => p.confirmed && !p.deletedAt)!;
       const jwt = generateJwt(profile.email, '12345');
@@ -225,6 +226,26 @@ describe('ProfilesController (e2e)', () => {
         });
     });
 
+    it('Message pattern returns correct error if the user is not authorized', (done) => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+      payload.lastName = 'Mitarai';
+
+      const record = new RmqRecordBuilder().setData(payload).build();
+
+      rmqClient.send('init_profile', record).subscribe({
+        next: () => {
+          done.fail('Operation should not have succeeded');
+        },
+        error: (err) => {
+          const error = err as UnauthorizedRpcErrorResponse;
+
+          expect(error.statusCode).toBe(401);
+          done();
+        },
+      });
+    });
+
     it('REST endpoint returns 404 if the profile does not exist', async () => {
       const payload = new CreateProfileDto();
       payload.firstName = 'Ryota';
@@ -315,19 +336,33 @@ describe('ProfilesController (e2e)', () => {
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     });
+
+    it('REST endpoint returns 401 if the user is unauthorized', async () => {
+      const payload = new CreateProfileDto();
+      payload.firstName = 'Ryota';
+
+      const response = await request(app.getHttpServer())
+        .post('/profiles/confirm')
+        .send(payload);
+
+      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    });
   });
 
-  describe('endpoint "/{id}" (PATCH)', () => {
+  describe('endpoint "/" (PATCH)', () => {
     it('Edits a profile successfully', async () => {
       const profile = profiles.find(
         (profile) => profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const requestBody = new EditProfileDto();
       requestBody.firstName = 'Ryota';
 
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -346,8 +381,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send({});
 
       expect(response.status).toBe(HttpStatus.NO_CONTENT);
@@ -368,8 +406,10 @@ describe('ProfilesController (e2e)', () => {
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
+      const jwt = generateJwt(profile.email, '1');
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.FORBIDDEN);
@@ -383,12 +423,15 @@ describe('ProfilesController (e2e)', () => {
     it('Returns 404 if the profile is deleted', async () => {
       const profile = profiles.find((profile) => !!profile.deletedAt)!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const requestBody = new EditProfileDto();
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -404,8 +447,11 @@ describe('ProfilesController (e2e)', () => {
       requestBody.firstName = 'Ryota';
       requestBody.lastName = 'Mitarai';
 
+      const jwt = generateJwt('myawesomeemail@test.com', '1');
+
       const response = await request(app.getHttpServer())
-        .patch('/profiles/15555')
+        .patch('/profiles')
+        .set('Authorization', `Bearer ${jwt}`)
         .send(requestBody);
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
@@ -424,8 +470,11 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);
@@ -439,11 +488,71 @@ describe('ProfilesController (e2e)', () => {
         (profile) => !profile.confirmed && !profile.deletedAt,
       )!;
 
+      const jwt = generateJwt(profile.email, '1');
+
       const response = await request(app.getHttpServer())
-        .patch(`/profiles/${profile.id}`)
+        .patch(`/profiles`)
+        .set('Authorization', `Bearer ${jwt}`)
         .send(payload);
 
       expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+    });
+
+    it('Returns 401 if the user is unauthorized', async () => {
+      const requestBody = new EditProfileDto();
+      requestBody.firstName = 'Ryota';
+
+      const response = await request(app.getHttpServer())
+        .patch(`/profiles`)
+        .send(requestBody);
+
+      expect(response.status).toBe(HttpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe('Deleting a profile (pattern "delete_profile")', () => {
+    it('Deletes a profile successfully', (done) => {
+      const profile = profiles.find(
+        (profile) => profile.confirmed && !profile.deletedAt,
+      )!;
+
+      const jwt = generateJwt(profile.email, '1');
+
+      const record = new RmqRecordBuilder().setData({}).setOptions({
+        headers: {
+          authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      rmqClient
+        .send('delete_profile', record)
+        .pipe(
+          tap((response: { email: string }) =>
+            expect(response.email).toBe(profile.email),
+          ),
+          switchMap(() =>
+            from(
+              request(app.getHttpServer())
+                .get(`/profiles/${profile.id}`)
+                .send(),
+            ),
+          ),
+        )
+        .subscribe({
+          next: (response) => {
+            expect(response.status).toBe(HttpStatus.NOT_FOUND);
+            const exception = response.body as NotFoundException;
+            expect(exception.message).toBe(
+              getProfileErrorMessages.doesNotExist,
+            );
+
+            done();
+          },
+          error: (err) => {
+            console.error(err);
+            done.fail();
+          },
+        });
     });
   });
 });

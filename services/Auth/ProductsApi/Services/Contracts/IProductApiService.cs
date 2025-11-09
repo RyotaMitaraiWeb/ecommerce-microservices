@@ -7,5 +7,6 @@ namespace ProductsApi.Services.Contracts
     public interface IProductApiService
     {
         Task<OneOf<InitializeProfileResultDto, InitializeProfileErrors>> InitializeProfile(string jwt);
+        Task<DeletedProfileResultDto> DeleteProfile(string jwt);
     }
 }

@@ -1,4 +1,5 @@
 import { CreateErrors } from '../types/CreateErrors';
+import { DeleteErrors } from '../types/DeleteErrors';
 import { EditErrors } from '../types/EditErrors';
 import { GetByEmailErrors } from '../types/GetByEmailErrors';
 import { InitializeProfileErrors } from '../types/InitializeProfileErrors';
@@ -36,4 +37,9 @@ export const profileInitializationErrors = {
     'Something went wrong with profile initialization',
   [InitializeProfileErrors.EmailAlreadyExists]:
     'Profile with this email has already been initialized',
+};
+
+export const deleteProfileErrors = {
+  [DeleteErrors.DoesNotExist]:
+    'Profile not found. Are you sure it is not deleted already?',
 };
